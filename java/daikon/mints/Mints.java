@@ -1,5 +1,6 @@
 package daikon.mints;
 
+import com.google.common.collect.Lists;
 import daikon.PptMap;
 
 import java.io.IOException;
@@ -12,70 +13,46 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+
 /**
- * (M)ining Interesting Likely (In)varian(ts).
+ * (Min)ing Interesting Likely Invarian(ts).
  *
  * @author Huascar A. Sanchez
  **/
 class Mints {
 
-  private final static String OUTPUT_DIRECTORY = "/Users/hsanchez/dev/vesperin/benchtop/output/";
+  private static final String FILE = "data.json";
+  private static final String OUTPUT_DIRECTORY = "/Users/hsanchez/dev/vesperin/benchtop/output/";
 
   /** get patterns **/
   public static void main(String... args) throws IOException {
 
     final Path output = Paths.get(OUTPUT_DIRECTORY);
 
-    final List<InvariantSequence> sequences = new Mints().sequenceList(output).stream().limit(10).collect(Collectors.toList());
+    final List<SequenceSegments> sequences = new Mints()
+      .sequenceList(output)
+      .stream()
+      .collect(Collectors.toList());
 
-    final Json file     = Json.object();
-    final Json sources  = Json.array();
+    final int k = (int) Math.floor(Math.sqrt(sequences.size()));
 
-    for(InvariantSequence eachSequence : sequences){
+    final List<List<SequenceSegments>> partitions = Lists.partition(sequences, k);
 
-      final Source src = eachSequence.source();
+    final Path filepath = Paths.get(FILE);
 
-      final Json source           = Json.object()
-        .set("source", String.format("%s#%s", src.className(), src.methodName()));
-
-      final Json actualInvariants = Json.array();
-      final Json entrySpace       = Json.array();
-      final Json exitSpace        = Json.array();
-
-      final boolean isEntry       = eachSequence.source().isEntry();
-
-      for(KnownInvariant each : eachSequence.content()){
-
-        actualInvariants.add(each.invariantObject().format());
-        if(isEntry){
-          entrySpace.add(each.typeOf());
-        } else {
-          exitSpace.add(each.typeOf());
-        }
-
-      }
-
-
-      source.set("invariants",  actualInvariants);
-      source.set("entryspace",  entrySpace);
-      source.set("exitspace",   exitSpace);
-
-      sources.add(source);
-
+    if(Files.exists(filepath)){
+      Files.delete(filepath);
     }
 
-    file.set("sources", sources);
+    final Log verbose = Log.verbose();
+    final TaskQueue queue = new TaskQueue(verbose, 20);
 
-    final Path here = Paths.get("data.json");
-    if(Files.exists(here)){
-      Files.delete(here);
+    for(List<SequenceSegments> each : partitions){
+      final WriteTask unit = new WriteTask(filepath, each);
+      queue.enqueue(unit);
     }
 
-    final byte[] content = file.toString().getBytes();
-
-    Files.write(here, content);
-
-    //sequences.stream().map(InvariantSequence::normalized).forEach(System.out::println);
+    queue.runTasks();
   }
 
   /**
@@ -84,13 +61,13 @@ class Mints {
    * @param fromDirectory the source of all these segments.
    * @return a segment list.
    */
-  private List<InvariantSequence> sequenceList(Path fromDirectory){
+  private List<SequenceSegments> sequenceList(Path fromDirectory){
     if(Objects.isNull(fromDirectory) || !Files.exists(fromDirectory)){
       return Collections.emptyList();
     }
 
     final List<PptMap>            containers  = Utils.mapList(fromDirectory);
-    final List<InvariantSequence> result      = new LinkedList<>();
+    final List<SequenceSegments> result      = new LinkedList<>();
 
     containers.forEach(c -> result.addAll(Sequences.filtered(c)));
 

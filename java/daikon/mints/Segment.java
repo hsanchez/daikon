@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 /**
  * @author Huascar Sanchez
  */
-class Source {
+class Segment {
 
   private static final Map<String, String> ENV;
 
@@ -45,20 +45,24 @@ class Source {
 
   private final String        fullClassName;
   private final boolean       isConstructor;
-  private final List<String>  guessedClassLabels;
-  private final String        paramsString;
+  private final List<String>  classLabels;
+  private final String        parametersString;
   private final String        methodName;
-  private final boolean       isEntry;
+  private final boolean       caughtAsPrecondition;
 
-  private Source(String fullClassName, String methodName,
-          String paramString, boolean isConstructor, boolean isEntry) {
+  private Segment(String fullClassName, String methodName,
+                  String paramString, boolean isConstructor, boolean caughtAsPrecondition) {
 
     this.fullClassName      = Objects.requireNonNull(fullClassName);
-    this.paramsString       = Objects.requireNonNull(paramString);
+    this.parametersString = Objects.requireNonNull(paramString);
     this.isConstructor      = isConstructor;
-    this.guessedClassLabels = Strings.generateLabel(methodName);
+    this.classLabels = Strings.generateLabel(methodName);
     this.methodName         = methodName;
-    this.isEntry            = isEntry;
+    this.caughtAsPrecondition = caughtAsPrecondition;
+  }
+
+  static Segment from(SegmentBuilder builder){
+    return builder.build();
   }
 
   /**
@@ -68,7 +72,7 @@ class Source {
    * @param pointName the program point name
    * @return a new source object.
    */
-  static Source from(PptName pointName, boolean isEntry) {
+  static Segment from(PptName pointName, boolean isEntry) {
 
     final String signature = pointName.getSignature();
     if (Objects.isNull(signature)) {
@@ -93,7 +97,7 @@ class Source {
 
     final String paramsString = Strings.joinParameters(ENV, params);
 
-    return new Source(
+    return new Segment(
       pointName.getFullClassName(),
       guessedName,
       paramsString,
@@ -111,11 +115,11 @@ class Source {
   }
 
   List<String> labelList() {
-    return guessedClassLabels;
+    return classLabels;
   }
 
   String paramString() {
-    return paramsString;
+    return parametersString;
   }
 
   String methodName() {
@@ -123,22 +127,22 @@ class Source {
   }
 
   boolean isEntry() {
-    return isEntry;
+    return caughtAsPrecondition;
   }
 
   @Override public int hashCode() {
-    return Objects.hash(fullClassName, methodName, paramsString);
+    return Objects.hash(fullClassName, methodName, parametersString);
   }
 
   @Override public boolean equals(Object obj) {
 
-    if (!(obj instanceof Source)) return false;
+    if (!(obj instanceof Segment)) return false;
 
-    final Source other = (Source) obj;
+    final Segment other = (Segment) obj;
 
     final boolean sameClassName   = other.fullClassName.equals(fullClassName);
     final boolean sameMethodName  = other.methodName.equals(methodName);
-    final boolean sameParams      = other.paramsString.equals(paramsString);
+    final boolean sameParams      = other.parametersString.equals(parametersString);
 
     return sameClassName && sameMethodName && sameParams;
   }
@@ -156,5 +160,9 @@ class Source {
         ? ""
         : (",	" + paramString())) +
       ")");
+  }
+
+  static class SegmentBuilder {
+    Segment build(){ return null; }
   }
 }

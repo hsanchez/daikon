@@ -13,11 +13,11 @@ import java.util.stream.Stream;
 /**
  * @author Huascar Sanchez
  */
-public class Immutables {
-  private Immutables(){}
+public class Immutable {
+  private Immutable(){}
 
   public static <T> List<T> emptyList(){
-    return Immutables.listOf(Collections.emptyList());
+    return Immutable.listOf(Collections.emptyList());
   }
 
   /**
@@ -60,7 +60,7 @@ public class Immutables {
    * @param <V> the output type of the value mapping function
    * @return a new immutable map
    */
-  public static <K, V> Map<K, V> mapOf(Stream<? extends Map.Entry<? extends K, ? extends V>> stream){
+  private static <K, V> Map<K, V> mapOf(Stream<? extends Map.Entry<? extends K, ? extends V>> stream){
     return stream.collect(toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
@@ -110,7 +110,7 @@ public class Immutables {
    * @param <T> the type parameter.
    * @return a new collector object.
    */
-  public static <T> Collector<T, ?, List<T>> toImmutableList() {
+  private static <T> Collector<T, ?, List<T>> toImmutableList() {
     return Collectors.collectingAndThen(
       Collectors.toList(),
       Collections::unmodifiableList

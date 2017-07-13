@@ -13,19 +13,19 @@ import java.util.stream.Collectors;
  *
  * @author Huascar Sanchez
  */
-class InvariantSequence implements Iterable<KnownInvariant> {
+class SequenceSegments implements Iterable<LikelyInvariant> {
 
-  private final Source                source;
-  private final List<KnownInvariant> invariants;
+  private final Segment seqEntry;
+  private final List<LikelyInvariant> invariants;
 
 
   /**
    * Construct an Invariant Sequence located at some source method.
-   * @param source the source of these invariants.
+   * @param seqEntry the source of these invariants.
    */
-  InvariantSequence(Source source) {
+  SequenceSegments(Segment seqEntry) {
 
-    this.source     = Objects.requireNonNull(source);
+    this.seqEntry = Objects.requireNonNull(seqEntry);
     this.invariants = new LinkedList<>();
 
   }
@@ -38,18 +38,18 @@ class InvariantSequence implements Iterable<KnownInvariant> {
   void add(List<Invariant> x) {
     if(x.isEmpty()) return;
 
-    final List<KnownInvariant> translated = translate(x);
+    final List<LikelyInvariant> translated = translate(x);
 
-    for(KnownInvariant each : translated){
+    for(LikelyInvariant each : translated){
       if(Objects.isNull(each)) continue;
 
       invariants.add(each);
     }
   }
 
-  private static List<KnownInvariant> translate(List<Invariant> x){
+  private static List<LikelyInvariant> translate(List<Invariant> x){
     return x.stream()
-      .map(KnownInvariant::from)
+      .map(LikelyInvariant::from)
       .collect(Collectors.toList());
 
   }
@@ -57,11 +57,11 @@ class InvariantSequence implements Iterable<KnownInvariant> {
   /**
    * @return the content of this segment.
    */
-  List<KnownInvariant> content() {
+  List<LikelyInvariant> content() {
     return invariants;
   }
 
-  @Override public Iterator<KnownInvariant> iterator() {
+  @Override public Iterator<LikelyInvariant> iterator() {
     return content().iterator();
   }
 
@@ -76,11 +76,11 @@ class InvariantSequence implements Iterable<KnownInvariant> {
    * @return a normalized view of this segment's invariants.
    */
   List<String> normalized() {
-    final List<KnownInvariant> content = content();
+    final List<LikelyInvariant> content = content();
     final List<String> result = new LinkedList<>();
 
-    for (KnownInvariant each : content) {
-      result.add(each.typeOf());
+    for (LikelyInvariant each : content) {
+      result.add(each.typeOfInvariant());
     }
 
     return result;
@@ -90,8 +90,8 @@ class InvariantSequence implements Iterable<KnownInvariant> {
    * @return the source or location from where these
    * invariants were extracted.
    */
-  Source source() {
-    return source;
+  Segment source() {
+    return seqEntry;
   }
 
   /**
@@ -102,7 +102,7 @@ class InvariantSequence implements Iterable<KnownInvariant> {
   }
 
   @Override public String toString() {
-    final Source src = source();
+    final Segment src = source();
 
     return src.className() + "#" + src.methodName()
       + "(" + size() + ((src.isEntry() ? " entry": " exit"))

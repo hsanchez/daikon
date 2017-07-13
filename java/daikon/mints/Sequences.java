@@ -26,7 +26,7 @@ class Sequences {
    * @param pptMap program point map
    * @return a new list of sequences
    */
-  static List<InvariantSequence> filtered(PptMap pptMap){
+  static List<SequenceSegments> filtered(PptMap pptMap){
     return from(pptMap, true);
   }
 
@@ -36,16 +36,16 @@ class Sequences {
    * @param pptMap program point map
    * @return a new list of segments
    */
-  static List<InvariantSequence> unfiltered(PptMap pptMap){
+  static List<SequenceSegments> unfiltered(PptMap pptMap){
     return from(pptMap, false);
   }
 
-  private static List<InvariantSequence> from(PptMap pptMap, boolean	skipWarning){
+  private static List<SequenceSegments> from(PptMap pptMap, boolean	skipWarning){
     if(Objects.isNull(pptMap))	return	Collections.emptyList();
 
-    final	List<InvariantSequence>	result	=	new LinkedList<>();
+    final	List<SequenceSegments>	result	=	new LinkedList<>();
 
-    final Map<Source, InvariantSequence> segmentMap = new HashMap<>();
+    final Map<Segment, SequenceSegments> segmentMap = new HashMap<>();
 
     for(String	eachKey	:	pptMap.nameStringSet()){
       // ignore Randoop & JUnit related artifacts
@@ -63,27 +63,27 @@ class Sequences {
       final PptTopLevel eachValue	=	pptMap.get(eachKey);
       final PptName pptName		=	eachValue.ppt_name;
 
-      final Optional<Source> candidateSource = Optional
-        .ofNullable(Source.from(pptName, !isExit));
+      final Optional<Segment> candidateSource = Optional
+        .ofNullable(Segment.from(pptName, !isExit));
 
       if(!candidateSource.isPresent()) continue;
 
-      final Source invSource = candidateSource.get();
+      final Segment seqEntry = candidateSource.get();
 
       // skip constructors
-      if(invSource.isConstructor()) continue;
+      if(seqEntry.isConstructor()) continue;
 
       final	List<Invariant> validOnes	=	collapseConsecutive(filterWarnings(
         eachValue.getInvariants(),
         skipWarning
       ));
 
-      if(!segmentMap.containsKey(invSource)){
-        final InvariantSequence sequence = new InvariantSequence(invSource);
+      if(!segmentMap.containsKey(seqEntry)){
+        final SequenceSegments sequence = new SequenceSegments(seqEntry);
         sequence.add(validOnes);
-        segmentMap.put(invSource, sequence);
+        segmentMap.put(seqEntry, sequence);
       } else {
-        segmentMap.get(invSource).add(validOnes);
+        segmentMap.get(seqEntry).add(validOnes);
       }
 
       result.addAll(segmentMap.values());

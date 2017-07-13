@@ -1,5 +1,11 @@
 package daikon.mints;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -11,8 +17,14 @@ import java.util.stream.Collectors;
 /**
  * @author Huascar Sanchez
  */
-class Strings {
+public class Strings {
+  private static final String EMPTY = "";
   private Strings(){}
+
+
+  static String empty(){
+    return EMPTY;
+  }
 
   static boolean isEmpty(String text){
     final Optional<String> optional = Optional.ofNullable(text);
@@ -61,45 +73,28 @@ class Strings {
     return toString.toString();
   }
 
-  public static String escape(final String json) {
-    StringBuilder sb = new StringBuilder();
-    sb.append("\"");
-
-    int jsonLength = json.length();
-
-    for (int i = 0; i < jsonLength; i++) {
-      char ch = json.charAt(i);
-      switch (ch) {
-        case '\\':
-          sb.append("\\\\");
-          break;
-        case '\"':
-          sb.append("\\\"");
-          break;
-        case '/':
-          sb.append("\\/");
-          break;
-        case '\b':
-          sb.append("\\b");
-          break;
-        case '\f':
-          sb.append("\\f");
-          break;
-        case '\n':
-          sb.append("\\n");
-          break;
-        case '\r':
-          sb.append("\\r");
-          break;
-        case '\t':
-          sb.append("\\t");
-          break;
-        default:
-          sb.append(ch);
-          break;
+  private static String readFromInputStream(InputStream inputStream) throws IOException {
+    StringBuilder content = new StringBuilder();
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
+      String line;
+      while ((line = br.readLine()) != null) {
+        content.append(line).append("\n");
       }
     }
-    sb.append("\"");
-    return sb.toString();
+
+    return content.toString();
+  }
+
+  static String fetchContent(URL url) {
+    try {
+
+      final InputStream is = (InputStream) url.getContent();
+
+      assert !Objects.isNull(is);
+
+      return readFromInputStream(is);
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
   }
 }
