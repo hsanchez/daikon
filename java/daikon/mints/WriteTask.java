@@ -8,22 +8,26 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.WRITE;
 
 /**
  * @author Huascar Sanchez
  */
 public class WriteTask extends Task {
   private final Path filepath;
-  private final List<SequenceSegments> partition;
+  private final List<SequenceSummary> partition;
+  private final ReentrantLock lock = new ReentrantLock();
 
   /**
    * Construct a new write task object.
    *
    */
-  WriteTask(Path filepath, List<SequenceSegments> partition) {
+  WriteTask(Path filepath, List<SequenceSummary> partition) {
     super("write to file");
     this.filepath   = filepath;
     this.partition  = Objects.requireNonNull(partition);
@@ -32,60 +36,49 @@ public class WriteTask extends Task {
   @Override protected Result execute() throws Exception {
     if(this.partition.isEmpty()) return Result.SKIPPED;
 
+    final List<JsonObject> objects = new CopyOnWriteArrayList<>();
 
-    final JsonArray main = Json.array().asArray();
+    for(SequenceSummary eachSummary : partition){
 
-    for(SequenceSegments each : partition){
+      final SequenceEntry seqEntry  = eachSummary.source();
+      final JsonObject    item      = Json.object();
 
-      final Segment src = each.source();
-      final JsonObject source    = Json.object();
+      item.add("name", String.format("%s#%s", seqEntry.className(), seqEntry.methodName()));
 
-    }
+      final JsonArray invs  = Json.array().asArray();
+      final JsonArray seq   = Json.array().asArray();
 
-
-
-    final JsonObject  file      = Json.object();
-    final JsonArray   sources   = Json.array().asArray();
-
-    for(SequenceSegments eachSequence : partition){
-
-      final Segment src = eachSequence.source();
-
-      final JsonObject source    = Json.object();
-      source.add("source", String.format("%s#%s", src.className(), src.methodName()));
-
-      final JsonArray actualInvariants = Json.array().asArray();
-      final JsonArray entrySpace       = Json.array().asArray();
-      final JsonArray exitSpace        = Json.array().asArray();
-
-      final boolean isEntry       = eachSequence.source().isEntry();
-
-      for(LikelyInvariant each : eachSequence.content()){
-
-        actualInvariants.add(each.invariantObject().format());
-        if(isEntry){
-          entrySpace.add(each.typeOfInvariant());
-        } else {
-          exitSpace.add(each.typeOfInvariant());
-        }
-
+      for(LikelyInvariant eachInv : eachSummary.content()){
+        invs.add(eachInv.invariantObject().format());
+        seq.add(eachInv.typeOfInvariant());
       }
 
 
-      source.add("invariants",  actualInvariants);
-      source.add("entryspace",  entrySpace);
-      source.add("exitspace",   exitSpace);
+      item.add("invs", invs);
+      item.add("seq", seq);
 
-      sources.add(source);
+      Log.verbose().info(item.toString());
+
+      objects.add(item);
 
     }
 
-    file.add("sources", sources);
+    // [
+    //   {name: ..., invs: [], seq: [] }, {name: ..., invs: [], seq: [] }, ...
+    // ]
+    JsonArray data = Json.array().asArray();
 
-    final byte[] content = file.toString().getBytes();
+    if(Files.exists(filepath)){
+      final String content = new String(Files.readAllBytes(filepath));
+      data = Json.parse(content).asArray();
+    }
 
-    Files.write(filepath, content, APPEND, CREATE);
+    objects.forEach(data::add);
 
+    final byte[] dataBytes = data.toString().getBytes();
+
+    Files.write(filepath, dataBytes, CREATE, WRITE, APPEND);
     return Result.SUCCESS;
   }
 }
+

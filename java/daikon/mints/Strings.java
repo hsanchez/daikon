@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -12,13 +11,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author Huascar Sanchez
  */
 public class Strings {
   private static final String EMPTY = "";
+  private static final String SPLIT_PATTERN = "(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])";
+
   private Strings(){}
 
 
@@ -27,28 +27,22 @@ public class Strings {
   }
 
   static boolean isEmpty(String text){
+    if(empty().equals(text)) return true;
+
     final Optional<String> optional = Optional.ofNullable(text);
     return optional.map(s -> !s.isEmpty()).orElse(false);
   }
 
 
   static List<String> generateLabel(String guessedName){
-    return Arrays.stream(
-      guessedName.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])"))
-      .map(String::toLowerCase)
-      .collect(Collectors.toList());
+    return Immutable.listOf(Arrays.stream(
+      guessedName.split(SPLIT_PATTERN))
+      .map(String::toLowerCase));
   }
 
-  /**
-   * <p>
-   * Perform JSON escaping so that ", <, >, etc. characters are properly encoded in the
-   * JSON string representation before returning to the client code. This is useful when
-   * serializing property names or string values.
-   * </p>
-   */
   static String joinParameters(Map<String, String> env, List<String> params){
 
-    if(Objects.isNull(params) || params.isEmpty()) return "";
+    if(Objects.isNull(params) || params.isEmpty()) return empty();
 
     final StringBuilder toString = new StringBuilder(params.size() * 100);
 

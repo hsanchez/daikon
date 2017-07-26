@@ -8,14 +8,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 
 /**
- * (Min)ing Interesting Likely Invarian(ts).
+ * Mints: Mining Interesting Likely Invariants.
  *
  * @author Huascar A. Sanchez
  **/
@@ -27,16 +27,16 @@ class Mints {
   /** get patterns **/
   public static void main(String... args) throws IOException {
 
+    final CommandLineParseResult result = CommandLineParseResult.parse(args);
+    result.throwParsingErrors();
+
     final Path output = Paths.get(OUTPUT_DIRECTORY);
 
-    final List<SequenceSegments> sequences = new Mints()
-      .sequenceList(output)
-      .stream()
-      .collect(Collectors.toList());
+    final List<SequenceSummary> summaries = new Mints().summaries(output);
 
-    final int k = (int) Math.floor(Math.sqrt(sequences.size()));
+    final int k = (int) Math.floor(Math.sqrt(summaries.size()));
 
-    final List<List<SequenceSegments>> partitions = Lists.partition(sequences, k);
+    final List<List<SequenceSummary>> partitions = Lists.partition(summaries, k);
 
     final Path filepath = Paths.get(FILE);
 
@@ -47,33 +47,32 @@ class Mints {
     final Log verbose = Log.verbose();
     final TaskQueue queue = new TaskQueue(verbose, 20);
 
-    for(List<SequenceSegments> each : partitions){
+    for(List<SequenceSummary> each : partitions){
       final WriteTask unit = new WriteTask(filepath, each);
       queue.enqueue(unit);
     }
 
-    queue.runTasks();
+    queue.calibrateAndRunTask();
   }
 
   /**
-   * Returns a list of non empty segments.
+   * Returns a list of non empty sequence summary objects.
    *
-   * @param fromDirectory the source of all these segments.
-   * @return a segment list.
+   * @param fromDirectory the source of all these summary objects.
+   * @return an immutable list of sequence summaries.
    */
-  private List<SequenceSegments> sequenceList(Path fromDirectory){
+  private List<SequenceSummary> summaries(Path fromDirectory){
     if(Objects.isNull(fromDirectory) || !Files.exists(fromDirectory)){
       return Collections.emptyList();
     }
 
-    final List<PptMap>            containers  = Utils.mapList(fromDirectory);
-    final List<SequenceSegments> result      = new LinkedList<>();
+    final List<PptMap>          containers  = Utils.mapList(fromDirectory);
+    final Set<SequenceSummary> result      = new HashSet<>();
 
-    containers.forEach(c -> result.addAll(Sequences.filtered(c)));
+    containers.forEach(c -> result.addAll(Summaries.from(c)));
 
-    return result.stream()
-      .filter(i -> !i.isEmpty())
-      .collect(Collectors.toList());
+    return Immutable.listOf(result.stream()
+      .filter(i -> !i.isEmpty()));
   }
 
 

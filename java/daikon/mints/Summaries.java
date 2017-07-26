@@ -17,35 +17,27 @@ import java.util.stream.Collectors;
 /**
  * @author Huascar Sanchez
  */
-class Sequences {
-  private Sequences(){}
+class Summaries {
+  private Summaries(){}
 
   /**
-   * Returns a list of invariant sequences; warnings will be filter out.
+   * Returns a list of summary objects. Each summary object contain a sequence of invariants;
+   * warnings will be filter out.
    *
    * @param pptMap program point map
-   * @return a new list of sequences
+   * @return a new list of summary objects.
    */
-  static List<SequenceSegments> filtered(PptMap pptMap){
+  static List<SequenceSummary> from(PptMap pptMap){
     return from(pptMap, true);
   }
 
-  /**
-   * Returns a list of invariant segments; warnings will not be filter out.
-   *
-   * @param pptMap program point map
-   * @return a new list of segments
-   */
-  static List<SequenceSegments> unfiltered(PptMap pptMap){
-    return from(pptMap, false);
-  }
-
-  private static List<SequenceSegments> from(PptMap pptMap, boolean	skipWarning){
+  @SuppressWarnings("SameParameterValue")
+  private static List<SequenceSummary> from(PptMap pptMap, boolean	skipWarning){
     if(Objects.isNull(pptMap))	return	Collections.emptyList();
 
-    final	List<SequenceSegments>	result	=	new LinkedList<>();
+    final	List<SequenceSummary>	result	=	new LinkedList<>();
 
-    final Map<Segment, SequenceSegments> segmentMap = new HashMap<>();
+    final Map<SequenceEntry, SequenceSummary> segmentMap = new HashMap<>();
 
     for(String	eachKey	:	pptMap.nameStringSet()){
       // ignore Randoop & JUnit related artifacts
@@ -63,12 +55,12 @@ class Sequences {
       final PptTopLevel eachValue	=	pptMap.get(eachKey);
       final PptName pptName		=	eachValue.ppt_name;
 
-      final Optional<Segment> candidateSource = Optional
-        .ofNullable(Segment.from(pptName, !isExit));
+      final Optional<SequenceEntry> candidateSource = Optional
+        .ofNullable(SequenceEntry.from(pptName, !isExit));
 
       if(!candidateSource.isPresent()) continue;
 
-      final Segment seqEntry = candidateSource.get();
+      final SequenceEntry seqEntry = candidateSource.get();
 
       // skip constructors
       if(seqEntry.isConstructor()) continue;
@@ -79,7 +71,7 @@ class Sequences {
       ));
 
       if(!segmentMap.containsKey(seqEntry)){
-        final SequenceSegments sequence = new SequenceSegments(seqEntry);
+        final SequenceSummary sequence = new SequenceSummary(seqEntry);
         sequence.add(validOnes);
         segmentMap.put(seqEntry, sequence);
       } else {

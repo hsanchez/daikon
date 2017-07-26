@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * @author Huascar Sanchez
  */
-public abstract class Task {
+abstract class Task {
   private final String name;
 
   final List<Task> firstToFinish              = new ArrayList<>();
@@ -34,7 +34,7 @@ public abstract class Task {
    * @param prerequisite the pre requisite task.
    * @return self
    */
-  public Task after(Task prerequisite){
+  Task after(Task prerequisite){
     firstToFinish.add(Objects.requireNonNull(prerequisite));
     return this;
   }
@@ -45,7 +45,7 @@ public abstract class Task {
    * @param prerequisites the collection of pre requisites
    * @return self
    */
-  public Task after(Collection<Task> prerequisites){
+  Task after(Collection<Task> prerequisites){
     prerequisites.forEach(this::after);
     return this;
   }
@@ -56,7 +56,7 @@ public abstract class Task {
    * @param prerequisite the pre requisite and successful task.
    * @return self
    */
-  public Task afterSuccess(Task prerequisite){
+  Task afterSuccess(Task prerequisite){
     firstToSuccessfullyFinish.add(Objects.requireNonNull(prerequisite));
     return this;
   }
@@ -67,7 +67,7 @@ public abstract class Task {
    * @param prerequisites the collection of pre requisites and successful tasks.
    * @return self
    */
-  public Task afterSuccess(Collection<Task> prerequisites){
+  Task afterSuccess(Collection<Task> prerequisites){
     prerequisites.forEach(this::afterSuccess);
     return this;
   }
@@ -78,7 +78,7 @@ public abstract class Task {
    * @return true if this is an action task. A task queue imposes certain
    * limits on how many actions may be run concurrently.
    */
-  public boolean isAction(){
+  boolean isAction(){
     return false;
   }
 
@@ -86,7 +86,7 @@ public abstract class Task {
   /**
    * @return true if this is a runnable task; false otherwise.
    */
-  public final boolean isRunnable(){
+  final boolean isRunnable(){
 
     for(Task each : firstToFinish){
       if(each.result == null){

@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 /**
  * @author Huascar Sanchez
  */
-class Segment {
+class SequenceEntry {
 
   private static final Map<String, String> ENV;
 
@@ -50,19 +50,16 @@ class Segment {
   private final String        methodName;
   private final boolean       caughtAsPrecondition;
 
-  private Segment(String fullClassName, String methodName,
-                  String paramString, boolean isConstructor, boolean caughtAsPrecondition) {
+  private SequenceEntry(String className, String methodName,
+                        String joinedParameters, boolean isConstructor,
+                        boolean isEntry) {
 
-    this.fullClassName      = Objects.requireNonNull(fullClassName);
-    this.parametersString = Objects.requireNonNull(paramString);
-    this.isConstructor      = isConstructor;
-    this.classLabels = Strings.generateLabel(methodName);
-    this.methodName         = methodName;
-    this.caughtAsPrecondition = caughtAsPrecondition;
-  }
-
-  static Segment from(SegmentBuilder builder){
-    return builder.build();
+    this.fullClassName        = Objects.requireNonNull(className);
+    this.parametersString     = Objects.requireNonNull(joinedParameters);
+    this.isConstructor        = isConstructor;
+    this.classLabels          = Strings.generateLabel(methodName);
+    this.methodName           = methodName;
+    this.caughtAsPrecondition = isEntry;
   }
 
   /**
@@ -72,7 +69,7 @@ class Segment {
    * @param pointName the program point name
    * @return a new source object.
    */
-  static Segment from(PptName pointName, boolean isEntry) {
+  static SequenceEntry from(PptName pointName, boolean isEntry) {
 
     final String signature = pointName.getSignature();
     if (Objects.isNull(signature)) {
@@ -82,24 +79,28 @@ class Segment {
     final Matcher matcher = Pattern.compile("\\((.*?)\\)")
       .matcher(signature);
 
-    List<String> params = null;
-    String guessedName = null;
+    List<String> parameters   = null;
+    String guessedMethodName  = null;
 
-    final String NOTHING = "";
+    final String NOTHING = Strings.empty();
+
     if (matcher.find()) {
 
-      params = Arrays.stream(matcher.group(1).split(",")).collect(Collectors.toList());
-      guessedName = signature.replace(matcher.group(1), NOTHING);
-      guessedName = guessedName.replace("()", "");
+      final String[] signatureElements = matcher.group(1).split(",");
+
+      parameters        = Immutable.listOf(Arrays.stream(signatureElements));
+      guessedMethodName = signature.replace(matcher.group(1), NOTHING);
+      guessedMethodName = guessedMethodName.replace("()", NOTHING);
     }
 
-    final boolean isConstructor = pointName.getShortClassName().equals(guessedName);
+    final String shortClassname = Objects.requireNonNull(pointName.getShortClassName());
+    final boolean isConstructor = shortClassname.equals(guessedMethodName);
 
-    final String paramsString = Strings.joinParameters(ENV, params);
+    final String paramsString = Strings.joinParameters(ENV, parameters);
 
-    return new Segment(
+    return new SequenceEntry(
       pointName.getFullClassName(),
-      guessedName,
+      guessedMethodName,
       paramsString,
       isConstructor,
       isEntry
@@ -136,9 +137,9 @@ class Segment {
 
   @Override public boolean equals(Object obj) {
 
-    if (!(obj instanceof Segment)) return false;
+    if (!(obj instanceof SequenceEntry)) return false;
 
-    final Segment other = (Segment) obj;
+    final SequenceEntry other = (SequenceEntry) obj;
 
     final boolean sameClassName   = other.fullClassName.equals(fullClassName);
     final boolean sameMethodName  = other.methodName.equals(methodName);
@@ -162,7 +163,4 @@ class Segment {
       ")");
   }
 
-  static class SegmentBuilder {
-    Segment build(){ return null; }
-  }
 }
