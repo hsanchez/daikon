@@ -9,27 +9,29 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.ReentrantLock;
 
-import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.WRITE;
 
 /**
  * @author Huascar Sanchez
  */
-public class WriteTask extends Task {
+public class MapTask extends Task {
   private final Path filepath;
   private final List<SequenceSummary> partition;
-  private final ReentrantLock lock = new ReentrantLock();
 
   /**
    * Construct a new write task object.
    *
    */
-  WriteTask(Path filepath, List<SequenceSummary> partition) {
+  MapTask(Path filepath, List<SequenceSummary> partition) {
     super("write to file");
     this.filepath   = filepath;
+
+    if(Files.exists(this.filepath)){
+      Utils.deleteFile(this.filepath);
+    }
+
     this.partition  = Objects.requireNonNull(partition);
   }
 
@@ -67,18 +69,15 @@ public class WriteTask extends Task {
     //   {name: ..., invs: [], seq: [] }, {name: ..., invs: [], seq: [] }, ...
     // ]
     JsonArray data = Json.array().asArray();
-
-    if(Files.exists(filepath)){
-      final String content = new String(Files.readAllBytes(filepath));
-      data = Json.parse(content).asArray();
-    }
-
     objects.forEach(data::add);
 
     final byte[] dataBytes = data.toString().getBytes();
 
-    Files.write(filepath, dataBytes, CREATE, WRITE, APPEND);
+    Files.write(filepath, dataBytes, CREATE, WRITE);
+
     return Result.SUCCESS;
   }
+
+
 }
 

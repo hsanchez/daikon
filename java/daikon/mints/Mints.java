@@ -21,8 +21,8 @@ import java.util.Set;
  **/
 class Mints {
 
-  private static final String FILE = "data.json";
-  private static final String OUTPUT_DIRECTORY = "/Users/hsanchez/dev/vesperin/benchtop/output/";
+  private static final String OUTPUT_DIRECTORY =
+    "/Users/hsanchez/dev/vesperin/benchtop/output/";
 
   /** get patterns **/
   public static void main(String... args) throws IOException {
@@ -38,19 +38,23 @@ class Mints {
 
     final List<List<SequenceSummary>> partitions = Lists.partition(summaries, k);
 
-    final Path filepath = Paths.get(FILE);
-
-    if(Files.exists(filepath)){
-      Files.delete(filepath);
-    }
-
     final Log verbose = Log.verbose();
     final TaskQueue queue = new TaskQueue(verbose, 20);
 
-    for(List<SequenceSummary> each : partitions){
-      final WriteTask unit = new WriteTask(filepath, each);
+    int count = 1; for(List<SequenceSummary> each : partitions){
+      final Path file = Paths.get(Integer.toString(count) + ".json");
+      final MapTask unit = new MapTask(file, each);
+
       queue.enqueue(unit);
+      count++;
     }
+
+    final List<Task> prerequisites = Immutable.listOf(queue.getTasks());
+
+    final ReduceTask reduce = new ReduceTask();
+    reduce.afterSuccess(prerequisites);
+
+    queue.enqueue(reduce);
 
     queue.calibrateAndRunTask();
   }

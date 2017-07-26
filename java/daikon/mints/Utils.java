@@ -151,4 +151,15 @@ class Utils {
 
     return invContainers;
   }
+
+  /**
+   * Deletes file in path.
+   *
+   * @param path file path
+   */
+  static void deleteFile(Path path){
+    try {
+      Files.delete(path);
+    } catch (IOException ignored){}
+  }
 }
