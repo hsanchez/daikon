@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * @author Huascar Sanchez
  */
 class Summaries {
-  private Summaries(){}
+  private Summaries() {}
 
   /**
    * Returns a list of summary objects. Each summary object contain a sequence of invariants;
@@ -27,50 +27,50 @@ class Summaries {
    * @param pptMap program point map
    * @return a new list of summary objects.
    */
-  static List<SequenceSummary> from(PptMap pptMap){
+  static List<SequenceSummary> from(PptMap pptMap) {
     return from(pptMap, true);
   }
 
   @SuppressWarnings("SameParameterValue")
-  private static List<SequenceSummary> from(PptMap pptMap, boolean	skipWarning){
-    if(Objects.isNull(pptMap))	return	Collections.emptyList();
+  private static List<SequenceSummary> from(PptMap pptMap, boolean skipWarning) {
+    if (Objects.isNull(pptMap)) return Collections.emptyList();
 
-    final	List<SequenceSummary>	result	=	new LinkedList<>();
+    final List<SequenceSummary> result = new LinkedList<>();
 
     final Map<SequenceEntry, SequenceSummary> segmentMap = new HashMap<>();
 
-    for(String	eachKey	:	pptMap.nameStringSet()){
+    for (String eachKey : pptMap.nameStringSet()) {
       // ignore Randoop & JUnit related artifacts
-      if(eachKey.contains("BuildersRegression"))	  continue;
-      if(eachKey.contains("RegressionTestDriver"))	continue;
-      if(eachKey.contains("org.junit."))					  continue;
-      if(eachKey.contains("RegressionTest"))			  continue;
+      if (eachKey.contains("BuildersRegression")) continue;
+      if (eachKey.contains("RegressionTestDriver")) continue;
+      if (eachKey.contains("org.junit.")) continue;
+      if (eachKey.contains("RegressionTest")) continue;
 
-      final	boolean	isEnter	=	eachKey.contains("ENTER");
-      final	boolean	isExit	=	eachKey.contains("EXIT")	&&	!isEnter;
+      final boolean isEnter = eachKey.contains("ENTER");
+      final boolean isExit = eachKey.contains("EXIT") && !isEnter;
 
       //if(isExit) continue;
       System.out.println("INFO: Processing " + ((isExit ? "input " : "output ")) + "invariants.");
 
-      final PptTopLevel eachValue	=	pptMap.get(eachKey);
-      final PptName pptName		=	eachValue.ppt_name;
+      final PptTopLevel eachValue = pptMap.get(eachKey);
+      final PptName pptName = eachValue.ppt_name;
 
       final Optional<SequenceEntry> candidateSource = Optional
         .ofNullable(SequenceEntry.from(pptName, !isExit));
 
-      if(!candidateSource.isPresent()) continue;
+      if (!candidateSource.isPresent()) continue;
 
       final SequenceEntry seqEntry = candidateSource.get();
 
       // skip constructors
-      if(seqEntry.isConstructor()) continue;
+      if (seqEntry.isConstructor()) continue;
 
-      final	List<Invariant> validOnes	=	collapseConsecutive(filterWarnings(
+      final List<Invariant> validOnes = collapseConsecutive(filterWarnings(
         eachValue.getInvariants(),
         skipWarning
       ));
 
-      if(!segmentMap.containsKey(seqEntry)){
+      if (!segmentMap.containsKey(seqEntry)) {
         final SequenceSummary sequence = new SequenceSummary(seqEntry);
         sequence.add(validOnes);
         segmentMap.put(seqEntry, sequence);
@@ -84,15 +84,15 @@ class Summaries {
     return result;
   }
 
-  private static List<Invariant> collapseConsecutive(List<Invariant> invariants){
+  private static List<Invariant> collapseConsecutive(List<Invariant> invariants) {
     final List<Invariant> result = new LinkedList<>();
 
-    if(invariants.isEmpty()) return result;
+    if (invariants.isEmpty()) return result;
 
     result.add(invariants.get(0));
 
-    for(Invariant each : invariants){
-      if(result.get(result.size() - 1).equals(each)) continue;
+    for (Invariant each : invariants) {
+      if (result.get(result.size() - 1).equals(each)) continue;
 
       result.add(each);
     }
@@ -101,10 +101,10 @@ class Summaries {
     return result;
   }
 
-  private static List<Invariant> filterWarnings(List<Invariant> invariants, boolean skipWarnings){
+  private static List<Invariant> filterWarnings(List<Invariant> invariants, boolean skipWarnings) {
     List<Invariant> validOnes = invariants;
 
-    if(skipWarnings){
+    if (skipWarnings) {
       validOnes = validOnes
         .stream()
         .filter(i -> !i.format().contains("warning:"))
