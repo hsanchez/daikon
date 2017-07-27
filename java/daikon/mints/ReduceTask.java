@@ -30,7 +30,7 @@ public class ReduceTask extends Task {
     super("merge files");
   }
 
-  @Override protected Result execute() throws Exception {
+  @Override protected TaskResult execute() throws Exception {
     final Path currentDir = Paths.get(".").toAbsolutePath().normalize();
 
     final List<Path> allJsons = collectFiles(currentDir);
@@ -67,7 +67,7 @@ public class ReduceTask extends Task {
       final byte[] dataBytes = data.toString().getBytes();
 
       Files.write(dataFile, dataBytes, CREATE, WRITE);
-      return Result.SUCCESS;
+      return TaskResult.SUCCESS;
 
     } finally {
       allJsons.forEach(Utils::deleteFile);

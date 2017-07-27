@@ -203,7 +203,7 @@ public class TaskQueue {
   }
 
   private synchronized void doneTask(Task task) {
-    if (task.result != Result.SUCCESS) {
+    if (task.result != TaskResult.SUCCESS) {
       failedTasks.add(task);
     }
 
@@ -282,7 +282,7 @@ public class TaskQueue {
       for (Task blocker : task.firstToSuccessfullyFinish) {
         if (blocker.result == null) {
           message.append("\n  blocked by unexecuted task: ").append(blocker);
-        } else if (blocker.result != Result.SUCCESS) {
+        } else if (blocker.result != TaskResult.SUCCESS) {
           message.append("\n  blocked by unsuccessful task: ").append(blocker);
         }
       }

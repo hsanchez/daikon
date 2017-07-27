@@ -35,8 +35,8 @@ public class MapTask extends Task {
     this.partition  = Objects.requireNonNull(partition);
   }
 
-  @Override protected Result execute() throws Exception {
-    if(this.partition.isEmpty()) return Result.SKIPPED;
+  @Override protected TaskResult execute() throws Exception {
+    if(this.partition.isEmpty()) return TaskResult.SKIPPED;
 
     final List<JsonObject> objects = new CopyOnWriteArrayList<>();
 
@@ -75,7 +75,7 @@ public class MapTask extends Task {
 
     Files.write(filepath, dataBytes, CREATE, WRITE);
 
-    return Result.SUCCESS;
+    return TaskResult.SUCCESS;
   }
 
 

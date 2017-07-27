@@ -14,7 +14,7 @@ abstract class Task {
   final List<Task> firstToFinish              = new ArrayList<>();
   final List<Task> firstToSuccessfullyFinish  = new ArrayList<>();
 
-  volatile Result result;
+  volatile TaskResult result;
 
   Exception thrown;
 
@@ -72,7 +72,7 @@ abstract class Task {
     return this;
   }
 
-  protected abstract Result execute() throws Exception;
+  protected abstract TaskResult execute() throws Exception;
 
   /**
    * @return true if this is an action task. A task queue imposes certain
@@ -95,7 +95,7 @@ abstract class Task {
     }
 
     for(Task each : firstToSuccessfullyFinish){
-      if(each.result != Result.SUCCESS){
+      if(each.result != TaskResult.SUCCESS){
         return false;
       }
     }
@@ -119,10 +119,10 @@ abstract class Task {
       log.info(name + " failed");
 
       thrown  = e;
-      result  = Result.ERROR;
+      result  = TaskResult.ERROR;
     }
 
-    if(Result.SUCCESS != result){
+    if(TaskResult.SUCCESS != result){
       log.warn(this + " " + result);
     }
   }

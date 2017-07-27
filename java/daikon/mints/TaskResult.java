@@ -3,7 +3,7 @@ package daikon.mints;
 /**
  * @author Huascar Sanchez
  */
-public enum Result {
+public enum TaskResult {
   UNSUPPORTED,
   ERROR,
   SUCCESS,

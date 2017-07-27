@@ -1,19 +1,5 @@
 package daikon.mints;
 
-import com.google.common.collect.Lists;
-import daikon.PptMap;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
-
 /**
  * Mints: Mining Interesting Likely Invariants.
  *
@@ -21,64 +7,43 @@ import java.util.Set;
  **/
 class Mints {
 
-  private static final String OUTPUT_DIRECTORY =
-    "/Users/hsanchez/dev/vesperin/benchtop/output/";
-
-  /** get patterns **/
-  public static void main(String... args) throws IOException {
-
-    final CommandLineParseResult result = CommandLineParseResult.parse(args);
-    result.throwParsingErrors();
-
-    final Path output = Paths.get(OUTPUT_DIRECTORY);
-
-    final List<SequenceSummary> summaries = new Mints().summaries(output);
-
-    final int k = (int) Math.floor(Math.sqrt(summaries.size()));
-
-    final List<List<SequenceSummary>> partitions = Lists.partition(summaries, k);
-
-    final Log verbose = Log.verbose();
-    final TaskQueue queue = new TaskQueue(verbose, 20);
-
-    int count = 1; for(List<SequenceSummary> each : partitions){
-      final Path file = Paths.get(Integer.toString(count) + ".json");
-      final MapTask unit = new MapTask(file, each);
-
-      queue.enqueue(unit);
-      count++;
+  /**
+   * Run a Mints operation mentioned in the <code>args</code>.
+   * If all operations run successfully, exit with a status of 0. Otherwise exit
+   * with a status of 1.
+   *
+   * @param args Mints' options
+   */
+  public static void main(String... args) {
+    try {
+      final boolean wasSuccessful = new Mints().runMain(args);
+      System.exit(wasSuccessful ? 0 : 1);
+    } catch (Exception e){
+      System.exit(1);
     }
-
-    final List<Task> prerequisites = Immutable.listOf(queue.getTasks());
-
-    final ReduceTask reduce = new ReduceTask();
-    reduce.afterSuccess(prerequisites);
-
-    queue.enqueue(reduce);
-
-    queue.calibrateAndRunTask();
   }
 
   /**
-   * Returns a list of non empty sequence summary objects.
+   * Run the main operations.
    *
-   * @param fromDirectory the source of all these summary objects.
-   * @return an immutable list of sequence summaries.
+   * @param args from main()
+   * @return either a successful or fail operation.
    */
-  private List<SequenceSummary> summaries(Path fromDirectory){
-    if(Objects.isNull(fromDirectory) || !Files.exists(fromDirectory)){
-      return Collections.emptyList();
-    }
+  private boolean runMain(String... args){
+    final CommandLineParseResult result = CommandLineParseResult.parse(args);
+    result.throwParsingErrors();
 
-    final List<PptMap>          containers  = Utils.mapList(fromDirectory);
-    final Set<SequenceSummary> result      = new HashSet<>();
-
-    containers.forEach(c -> result.addAll(Summaries.from(c)));
-
-    return Immutable.listOf(result.stream()
-      .filter(i -> !i.isEmpty()));
+    return run(result.createRequest());
   }
 
-
+  private boolean run(Request request){
+    try {
+      request.fulfill();
+      return true;
+    } catch (Exception e){
+      request.getLog().error("Unable to fulfill " + request, e);
+      return false;
+    }
+  }
 
 }
