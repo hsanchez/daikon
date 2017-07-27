@@ -76,7 +76,7 @@ public class CommandLineParseResult {
   }
 
   /**
-   * Parses the command-line arguments 'args', setting the @Option fields of the 'optionSource' provided to the constructor.
+   * Parses the command-line arguments 'args'.
    * Returns a list of the positional arguments left over after processing all options.
    */
   public static CommandLineParseResult parse(String[] args) {
@@ -271,7 +271,7 @@ public class CommandLineParseResult {
     }
   }
 
-  // Returns the next element of 'args' if there is one. Uses 'name' and 'field' to construct a helpful error message.
+  // Returns the next element of 'args' if there is one.
   private String grabNextValue(Iterator<String> args, String name) {
     if (!args.hasNext()) {
       throw new RuntimeException(String.format("no value found for %s", name));
