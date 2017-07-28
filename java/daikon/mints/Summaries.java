@@ -65,10 +65,10 @@ class Summaries {
       // skip constructors
       if (seqEntry.isConstructor()) continue;
 
-      final List<Invariant> validOnes = collapseConsecutive(filterWarnings(
+      final List<Invariant> validOnes = filterWarnings(
         eachValue.getInvariants(),
         skipWarning
-      ));
+      );
 
       if (!segmentMap.containsKey(seqEntry)) {
         final SequenceSummary sequence = new SequenceSummary(seqEntry);
@@ -80,23 +80,6 @@ class Summaries {
 
       result.addAll(segmentMap.values());
     }
-
-    return result;
-  }
-
-  private static List<Invariant> collapseConsecutive(List<Invariant> invariants) {
-    final List<Invariant> result = new LinkedList<>();
-
-    if (invariants.isEmpty()) return result;
-
-    result.add(invariants.get(0));
-
-    for (Invariant each : invariants) {
-      if (result.get(result.size() - 1).equals(each)) continue;
-
-      result.add(each);
-    }
-
 
     return result;
   }

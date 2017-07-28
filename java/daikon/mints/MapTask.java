@@ -50,16 +50,17 @@ public class MapTask extends Task {
       item.add("name", String.format("%s#%s", seqEntry.className(), seqEntry.methodName()));
 
       final JsonArray invs  = Json.array().asArray();
-      final JsonArray seq   = Json.array().asArray();
 
       for(LikelyInvariant eachInv : eachSummary.content()){
-        invs.add(eachInv.invariantObject().format());
-        seq.add(eachInv.typeOfInvariant());
+        final JsonObject eachObject = Json.object();
+
+        eachObject.add("i", eachInv.invariantObject().format()); // i: invariant
+        eachObject.add("t", eachInv.typeOfInvariant()); // t: type of invariant
+
+        invs.add(eachObject);
       }
 
-
       item.add("invs", invs);
-      item.add("seq", seq);
 
       log.info(item.toString());
 
@@ -68,7 +69,7 @@ public class MapTask extends Task {
     }
 
     // [
-    //   {name: ..., invs: [], seq: [] }, {name: ..., invs: [], seq: [] }, ...
+    //   {name: ..., invs: [{i:..,t:...}, ...]}, {name: ..., invs: [{i:..,t:...}, ...]}, ...
     // ]
     JsonArray data = Json.array().asArray();
     objects.forEach(data::add);
