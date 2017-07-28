@@ -26,17 +26,18 @@ import static java.nio.file.StandardOpenOption.WRITE;
  */
 public class ReduceTask extends Task {
 
-  ReduceTask(){
+  private final Log log;
+
+  ReduceTask(Log log){
     super("merge files");
+    this.log = log;
   }
 
   @Override protected TaskResult execute() throws Exception {
     final Path currentDir = Paths.get(".").toAbsolutePath().normalize();
 
     final List<Path> allJsons = collectFiles(currentDir);
-
-    allJsons.forEach(System.out::println);
-
+    log.info(String.format("Collected %d files", allJsons.size()));
 
     final JsonArray data = Json.array().asArray();
     allJsons.forEach(e -> {
@@ -61,12 +62,14 @@ public class ReduceTask extends Task {
     try {
       final Path dataFile = Paths.get("data.json");
       if(Files.exists(dataFile)){
+        log.info("Deleting already created data.json file.");
         Utils.deleteFile(dataFile);
       }
 
       final byte[] dataBytes = data.toString().getBytes();
 
       Files.write(dataFile, dataBytes, CREATE, WRITE);
+      log.info(String.format("Copied %d records", data.size()));
       return TaskResult.SUCCESS;
 
     } finally {

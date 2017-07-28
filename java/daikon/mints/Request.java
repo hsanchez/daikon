@@ -76,7 +76,7 @@ abstract class Request {
       int count = 1;
       for(List<SequenceSummary> each : partitions){
         final Path file = Paths.get(Integer.toString(count) + ".json");
-        final MapTask unit = new MapTask(file, each);
+        final MapTask unit = new MapTask(file, each, log);
 
         queue.enqueue(unit);
         count++;
@@ -84,7 +84,7 @@ abstract class Request {
 
       final List<Task> prerequisites = Immutable.listOf(queue.getTasks());
 
-      final ReduceTask reduce = new ReduceTask();
+      final ReduceTask reduce = new ReduceTask(log);
       reduce.afterSuccess(prerequisites);
 
       queue.enqueue(reduce);

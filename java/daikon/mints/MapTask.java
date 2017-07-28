@@ -17,16 +17,18 @@ import static java.nio.file.StandardOpenOption.WRITE;
  * @author Huascar Sanchez
  */
 public class MapTask extends Task {
-  private final Path filepath;
+  private final Path  filepath;
+  private final Log   log;
   private final List<SequenceSummary> partition;
 
   /**
    * Construct a new write task object.
    *
    */
-  MapTask(Path filepath, List<SequenceSummary> partition) {
+  MapTask(Path filepath, List<SequenceSummary> partition, Log log) {
     super("write to file");
     this.filepath   = filepath;
+    this.log        = log;
 
     if(Files.exists(this.filepath)){
       Utils.deleteFile(this.filepath);
@@ -59,7 +61,7 @@ public class MapTask extends Task {
       item.add("invs", invs);
       item.add("seq", seq);
 
-      Log.verbose().info(item.toString());
+      log.info(item.toString());
 
       objects.add(item);
 
