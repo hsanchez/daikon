@@ -37,7 +37,7 @@ class Summaries {
 
     final List<SequenceSummary> result = new LinkedList<>();
 
-    final Map<SequenceEntry, SequenceSummary> segmentMap = new HashMap<>();
+    final Map<SummaryDescriptor, SequenceSummary> segmentMap = new HashMap<>();
 
     for (String eachKey : pptMap.nameStringSet()) {
       // ignore Randoop & JUnit related artifacts
@@ -55,27 +55,27 @@ class Summaries {
       final PptTopLevel eachValue = pptMap.get(eachKey);
       final PptName pptName = eachValue.ppt_name;
 
-      final Optional<SequenceEntry> candidateSource = Optional
-        .ofNullable(SequenceEntry.from(pptName, !isExit));
+      final Optional<SummaryDescriptor> candidateSource = Optional
+        .ofNullable(SummaryDescriptor.from(pptName, !isExit));
 
       if (!candidateSource.isPresent()) continue;
 
-      final SequenceEntry seqEntry = candidateSource.get();
+      final SummaryDescriptor descriptor = candidateSource.get();
 
       // skip constructors
-      if (seqEntry.isConstructor()) continue;
+      if (descriptor.isConstructor()) continue;
 
       final List<Invariant> validOnes = filterWarnings(
         eachValue.getInvariants(),
         skipWarning
       );
 
-      if (!segmentMap.containsKey(seqEntry)) {
-        final SequenceSummary sequence = new SequenceSummary(seqEntry);
+      if (!segmentMap.containsKey(descriptor)) {
+        final SequenceSummary sequence = new SequenceSummary(descriptor);
         sequence.add(validOnes);
-        segmentMap.put(seqEntry, sequence);
+        segmentMap.put(descriptor, sequence);
       } else {
-        segmentMap.get(seqEntry).add(validOnes);
+        segmentMap.get(descriptor).add(validOnes);
       }
 
       result.addAll(segmentMap.values());

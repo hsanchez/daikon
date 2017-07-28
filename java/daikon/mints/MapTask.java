@@ -44,7 +44,7 @@ public class MapTask extends Task {
 
     for(SequenceSummary eachSummary : partition){
 
-      final SequenceEntry seqEntry  = eachSummary.source();
+      final SummaryDescriptor seqEntry  = eachSummary.source();
       final JsonObject    item      = Json.object();
 
       item.add("name", String.format("%s#%s", seqEntry.className(), seqEntry.methodName()));

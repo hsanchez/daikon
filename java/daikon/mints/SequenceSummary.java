@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  */
 class SequenceSummary implements Iterable<LikelyInvariant> {
 
-  private final SequenceEntry seqEntry;
+  private final SummaryDescriptor seqEntry;
   private final List<LikelyInvariant> invariants;
 
 
@@ -23,7 +23,7 @@ class SequenceSummary implements Iterable<LikelyInvariant> {
    * Construct an Invariant Sequence located at some source method.
    * @param seqEntry the source of these invariants.
    */
-  SequenceSummary(SequenceEntry seqEntry) {
+  SequenceSummary(SummaryDescriptor seqEntry) {
 
     this.seqEntry = Objects.requireNonNull(seqEntry);
     this.invariants = new LinkedList<>();
@@ -90,7 +90,7 @@ class SequenceSummary implements Iterable<LikelyInvariant> {
    * @return the source or location from where these
    * invariants were extracted.
    */
-  SequenceEntry source() {
+  SummaryDescriptor source() {
     return seqEntry;
   }
 
@@ -102,7 +102,7 @@ class SequenceSummary implements Iterable<LikelyInvariant> {
   }
 
   @Override public String toString() {
-    final SequenceEntry src = source();
+    final SummaryDescriptor src = source();
 
     return src.className() + "#" + src.methodName()
       + "(" + size() + ((src.isEntry() ? " entry": " exit"))

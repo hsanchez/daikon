@@ -10,12 +10,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * @author Huascar Sanchez
  */
-class SequenceEntry {
+class SummaryDescriptor {
 
   private static final Map<String, String> ENV;
 
@@ -50,9 +49,9 @@ class SequenceEntry {
   private final String        methodName;
   private final boolean       caughtAsPrecondition;
 
-  private SequenceEntry(String className, String methodName,
-                        String joinedParameters, boolean isConstructor,
-                        boolean isEntry) {
+  private SummaryDescriptor(String className, String methodName,
+                            String joinedParameters, boolean isConstructor,
+                            boolean isEntry) {
 
     this.fullClassName        = Objects.requireNonNull(className);
     this.parametersString     = Objects.requireNonNull(joinedParameters);
@@ -69,7 +68,7 @@ class SequenceEntry {
    * @param pointName the program point name
    * @return a new source object.
    */
-  static SequenceEntry from(PptName pointName, boolean isEntry) {
+  static SummaryDescriptor from(PptName pointName, boolean isEntry) {
 
     final String signature = pointName.getSignature();
     if (Objects.isNull(signature)) {
@@ -98,7 +97,7 @@ class SequenceEntry {
 
     final String paramsString = Strings.joinParameters(ENV, parameters);
 
-    return new SequenceEntry(
+    return new SummaryDescriptor(
       pointName.getFullClassName(),
       guessedMethodName,
       paramsString,
@@ -137,9 +136,9 @@ class SequenceEntry {
 
   @Override public boolean equals(Object obj) {
 
-    if (!(obj instanceof SequenceEntry)) return false;
+    if (!(obj instanceof SummaryDescriptor)) return false;
 
-    final SequenceEntry other = (SequenceEntry) obj;
+    final SummaryDescriptor other = (SummaryDescriptor) obj;
 
     final boolean sameClassName   = other.fullClassName.equals(fullClassName);
     final boolean sameMethodName  = other.methodName.equals(methodName);
