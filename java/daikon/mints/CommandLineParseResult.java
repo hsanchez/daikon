@@ -115,6 +115,12 @@ public class CommandLineParseResult {
         final Path from = Paths.get(getValue("-f", "--from"));
         //final Path to   = Paths.get(getValue("-t", "--to"));
 
+        final Path dataFile = Paths.get("data.json");
+        if(Files.exists(dataFile)){
+          log.info("Deleting content already created data.json file.");
+          Utils.deleteFile(dataFile);
+        }
+
         return Request.invariantsData(from, log);
       }
 

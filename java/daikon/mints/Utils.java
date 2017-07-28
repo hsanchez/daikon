@@ -80,15 +80,15 @@ class Utils {
    * @param skipHints keywords used to avoid certain files collection.
    * @return the list of files matching a given extension.
    */
-  private static List<File> findFiles(File directory, String... skipHints){
+  static List<File> findFiles(File directory, Log log, String extension, String... skipHints){
 
     final List<File> data = new ArrayList<>();
 
     try {
-      walkDirectory(directory, "gz", data, skipHints);
-    } catch (IOException ignored) {
-      System.out.println(
-        String.format("Error: unable to crawl %s.", directory.getName())
+      walkDirectory(directory, extension, data, skipHints);
+    } catch (IOException e) {
+      log.error(
+        String.format("Error: unable to crawl %s.", directory.getName()), e
       );
     }
 
@@ -113,7 +113,7 @@ class Utils {
     if(!Files.exists(directory)) return Collections.emptyList();
     final File location = directory.toFile();
 
-    return findFiles(location,  /*skip dtrace.gz files*/"dtrace");
+    return findFiles(location, Log.verbose(), "gz", /*skip dtrace.gz files*/"dtrace");
   }
 
   /**
