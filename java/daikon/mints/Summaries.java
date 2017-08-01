@@ -5,7 +5,13 @@ import daikon.PptName;
 import daikon.PptTopLevel;
 import daikon.inv.Invariant;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -75,41 +81,6 @@ class Summaries {
       }
 
       result.addAll(segmentMap.values());
-    }
-
-    return result;
-  }
-
-  // Inspired by the algorithm that solves the Longest Repeated Substring using Suffix Arrays
-  private static List<Invariant> commonInvariantSublistOfNInvariants(List<Invariant> validOnes){
-
-    int max = 0;
-    List<Invariant> result = new ArrayList<>();
-
-    final int N = validOnes.size();
-
-    for(int start = 0; start + max < N - 1; start++){
-      for(int shift = 1; start + shift + max < N; shift++){
-        int length = 0;
-
-        // While types of invariants match, count the length
-        while(
-          /* matching invariant types */
-          validOnes.get(start + length).format()
-            .equals(validOnes.get(start + shift + length).format())
-          /* hasn't reached the end yet*/
-          && start + shift + length < N - 1) {
-
-          length++;
-
-        }
-
-        // If the length is larger - update the new max size
-        if (length > max ) {
-          max     = length;
-          result  = validOnes.subList(start, start + length + 1);
-        }
-      }
     }
 
     return result;
