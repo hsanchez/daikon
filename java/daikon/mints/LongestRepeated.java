@@ -19,23 +19,25 @@ import java.util.stream.Collectors;
 class LongestRepeated {
   /**
    * Gets the longest repeated sub list.
-   * @param extracted the list of Daikon-produced invariants.
+   * @param longList the list of Daikon-produced invariants.
    * @return a new sublist.
    */
-  static List<Invariant> sublist(List<Invariant> extracted){
-    final int n = extracted.size();
-    final SuffixArray sa = new SuffixArray(extracted);
+  static List<Invariant> sublist(List<Invariant> longList){
+    if(longList.isEmpty()) return longList;
+
+    final int n = longList.size();
+    final SuffixArray sa = new SuffixArray(longList);
 
     List<Invariant> lrs = new ArrayList<>();
 
     for(int idx = 1; idx < n; idx++){
       int length = sa.lcp(idx);
       if(length > lrs.size()){
-        lrs = extracted.subList(sa.index(idx), sa.index(idx) + length);
+        lrs = longList.subList(sa.index(idx), sa.index(idx) + length);
       }
     }
 
-    return lrs;
+    return lrs.isEmpty() ? longList : lrs;
   }
 
   /**
