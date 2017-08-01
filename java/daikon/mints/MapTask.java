@@ -31,7 +31,7 @@ public class MapTask extends Task {
     this.log        = log;
 
     if(Files.exists(this.filepath)){
-      Utils.deleteFile(this.filepath);
+      FileUtils.deleteFile(this.filepath);
     }
 
     this.partition  = Objects.requireNonNull(partition);

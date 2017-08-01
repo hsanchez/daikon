@@ -104,7 +104,7 @@ abstract class Request {
         return Collections.emptyList();
       }
 
-      final List<PptMap>          containers  = Utils.mapList(fromDirectory);
+      final List<PptMap>         containers  = FileUtils.mapList(fromDirectory);
       final Set<SequenceSummary> result      = new HashSet<>();
 
       containers.forEach(c -> result.addAll(Summaries.from(c)));

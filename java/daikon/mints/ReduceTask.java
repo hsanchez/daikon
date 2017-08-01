@@ -63,7 +63,7 @@ public class ReduceTask extends Task {
       return TaskResult.SUCCESS;
 
     } finally {
-      allJsons.forEach(Utils::deleteFile);
+      allJsons.forEach(FileUtils::deleteFile);
     }
 
   }
@@ -83,7 +83,7 @@ public class ReduceTask extends Task {
   private static List<Path> getJsonFiles(final Path classDir, Log log){
     final File directory = classDir.toFile();
     return Immutable.listOf(
-      Utils.findFiles(directory, log, "json")
+      FileUtils.findFiles(directory, log, "json")
         .stream().map(File::toPath)
     );
   }

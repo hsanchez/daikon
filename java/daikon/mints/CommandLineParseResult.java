@@ -118,7 +118,7 @@ public class CommandLineParseResult {
         final Path dataFile = Paths.get("data.json");
         if(Files.exists(dataFile)){
           log.info("Deleting content already created data.json file.");
-          Utils.deleteFile(dataFile);
+          FileUtils.deleteFile(dataFile);
         }
 
         return Request.invariantsData(from, log);

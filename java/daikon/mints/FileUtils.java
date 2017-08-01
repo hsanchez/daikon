@@ -26,8 +26,8 @@ import java.util.stream.Collectors;
 /**
  * @author Huascar Sanchez
  */
-class Utils {
-  private Utils(){}
+class FileUtils {
+  private FileUtils(){}
 
 
   /**
@@ -142,7 +142,7 @@ class Utils {
   static List<PptMap> mapList(Path directory){
     final List<File> invFiles = fileList(directory);
     final List<PptMap> invContainers = invFiles.stream()
-      .map(Utils::toPptMap)
+      .map(FileUtils::toPptMap)
       .collect(Collectors.toList());
 
     if(invContainers.isEmpty()){

@@ -29,11 +29,20 @@ class LikelyInvariant {
    * @return a new LikelyInvariant object.
    */
   static LikelyInvariant from(Invariant inv){
+    return new LikelyInvariant(typeOf(inv), inv);
+  }
 
+  /**
+   * Returns the type of invariant we are dealing with.
+   *
+   * @param inv the Daikon invariant object.
+   * @return the type of the Daikon Invariant.
+   */
+  static String typeOf(Invariant inv){
     final Class<? extends Invariant> daikonClass =
       Objects.requireNonNull(inv.getClass());
 
-    return new LikelyInvariant(daikonClass.getSimpleName(), inv);
+    return daikonClass.getSimpleName();
   }
 
   /**
