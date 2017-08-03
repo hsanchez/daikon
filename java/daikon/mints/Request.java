@@ -6,9 +6,11 @@ import daikon.PptMap;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -133,7 +135,38 @@ abstract class Request {
     }
 
     @Override void fulfill() {
-      // TODO(Di or Huascar) implement this
+
+      // TODO(Huascar) the following:
+      // Load Json file
+      // Create a HashMap with references to JSON objects (Records)
+      // Create a Sequence object holding these records
+      // Mine these sequences using an algorithm, which solves
+      // the multiple longest common subsequence problem (but for lists
+      // of records).
+
+      final Map<String, List<Record>> records = Jsons.readJson(this.jsonFile);
+      final List<List<Record>> allRecords = new ArrayList<>();
+      records.entrySet().forEach(e -> allRecords.add(e.getValue()));
+
+      final List<Record> interestingRecords = Inference.commonSubList(allRecords);
+
+      log.info(String.format("Pattern size: %d", interestingRecords.size()));
+
+      log.info("Pattern: " + recordsAsString(interestingRecords));
+
+
+      // later? use PAM to mine interesting patterns; then recover Invariant object
+      // by creating a map that
+      // hold references to Invariants (from PptMap) loaded with
+      // FileIO.read_serialized_pptmap (See FileUtils.toPptMap)
+    }
+
+    private static String recordsAsString(List<Record> interestingSequence){
+      final StringBuilder builder = new StringBuilder(200 * interestingSequence.size());
+      builder.append("[\n");
+      interestingSequence.forEach(r -> builder.append("\t").append(r.type()).append("\n"));
+      builder.append("]");
+      return builder.toString();
     }
 
     @Override Log getLog() {

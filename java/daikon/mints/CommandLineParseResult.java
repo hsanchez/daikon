@@ -96,11 +96,11 @@ public class CommandLineParseResult {
     if(containsPatternsOption()){
       if(!containsInputFileOption()){
         throw new ParsingException(
-          Collections.singletonList(new IllegalStateException("Missing (-i | --input) input file."))
+          Collections.singletonList(new IllegalStateException("Missing (-i | --in) input file."))
         );
       }
 
-      final Path jsonFile = Paths.get(getValue("-i", "--input"));
+      final Path jsonFile = Paths.get(getValue("-i", "--in"));
       if(!Files.exists(jsonFile)){
         throw new ParsingException(
           Collections.singletonList(new IllegalStateException("Not found input file."))
@@ -266,11 +266,16 @@ public class CommandLineParseResult {
       final String name = "-" + arg.charAt(i);
       // We need a value. If there's anything left, we take the rest of this "short option".
       String value;
-      if (i + 1 < arg.length()) { // similar to args.hasNext()
-        value = arg.substring(i + 1);
-        i = arg.length() - 1;
+
+      if(BOOLEAN_OPTIONS.contains(name)){
+        value = "true";
       } else {
-        value = grabNextValue(args, name);
+        if (i + 1 < arg.length()) { // similar to args.hasNext()
+          value = arg.substring(i + 1);
+          i = arg.length() - 1;
+        } else {
+          value = grabNextValue(args, name);
+        }
       }
 
       arguments.put(name, value);

@@ -1,5 +1,8 @@
 package daikon.mints;
 
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonValue;
 import daikon.FileIO;
 import daikon.PptMap;
 
@@ -150,6 +153,29 @@ class FileUtils {
     }
 
     return invContainers;
+  }
+
+  /**
+   * Loads the content of a JSON file.
+   *
+   * @param filepath the path to the JSON file.
+   * @return a new Json value.
+   */
+  static JsonValue toJson(Path filepath){
+    JsonValue result = Json.object();
+
+    if(!Files.exists(filepath)){
+      return result;
+    }
+
+    try {
+      final String content = new String(Files.readAllBytes(filepath));
+      result = Json.parse(content);
+    } catch (IOException ignored){
+      Log.verbose().error("Unable to read JSON file", ignored);
+    }
+
+    return result;
   }
 
   /**
