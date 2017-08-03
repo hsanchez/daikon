@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
  * Inspired by http://algs4.cs.princeton.edu/63suffix/LongestRepeatedSubstring.java.html,
  * but instead of dealing with sub-strings, we are dealing with sub-lists. Some
  * implementation considerations (related to dealing with lists) were taken into
- * consideration.
+ * account.
  *
  * @author Huascar Sanchez
  */
@@ -69,17 +69,17 @@ class LongestRepeated {
      * @return index into the original list of invariants.
      */
     int index(int i){
-      if(i < 0 || i >= suffixes.length) throw new IllegalArgumentException();
+      if(i < 0 || i >= length()) throw new IllegalArgumentException();
       return suffixes[i].index;
     }
 
     /**
-     * Gets the length of the longest common (and consequetive) list of invariants.
+     * Gets the length of the longest common (and consecutive) list of invariants.
      * @param i an integer between 0 and <em>n</em>-1;
      * @return length of longest common list of invariants.
      */
     int lcp(int i){
-      if (i < 1 || i >= suffixes.length) throw new IllegalArgumentException();
+      if (i < 1 || i >= length()) throw new IllegalArgumentException();
       return lcpSuffix(suffixes[i], suffixes[i-1]);
     }
 
@@ -135,39 +135,5 @@ class LongestRepeated {
         .collect(Collectors.toList())
         .toString();
     }
-  }
-
-  public static void main(String[] args) {
-    String x = "AAABCCDEEEFG";
-    String y = "ACDDEGH";
-    int M = x.length();
-    int N = y.length();
-
-    // opt[i][j] = length of LCS of x[i..M] and y[j..N]
-    int[][] opt = new int[M + 1][N + 1];
-
-    // compute length of LCS and all sub-problems via dynamic programming
-    for (int i = M - 1; i >= 0; i--) {
-      for (int j = N - 1; j >= 0; j--) {
-        if (x.charAt(i) == y.charAt(j))
-          opt[i][j] = opt[i + 1][j + 1] + 1;
-        else
-          opt[i][j] = Math.max(opt[i + 1][j], opt[i][j + 1]);
-      }
-    }
-
-
-    // recover LCS itself and print it to standard output
-    int i = 0, j = 0;
-    while (i < M && j < N) {
-      if (x.charAt(i) == y.charAt(j)) {
-        System.out.print(x.charAt(i));
-        i++;
-        j++;
-      } else if (opt[i + 1][j] >= opt[i][j + 1]) i++;
-      else j++;
-    }
-    System.out.println();
-
   }
 }
