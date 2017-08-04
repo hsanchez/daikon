@@ -20,11 +20,13 @@ import static java.nio.file.StandardOpenOption.WRITE;
  */
 public class ReduceTask extends Task {
 
-  private final Log log;
+  private final Path  output;
+  private final Log   log;
 
-  ReduceTask(Log log){
+  ReduceTask(Path output, Log log){
     super("merge files");
-    this.log = log;
+    this.output = output;
+    this.log    = log;
   }
 
   @Override protected TaskResult execute() throws Exception {
@@ -54,10 +56,9 @@ public class ReduceTask extends Task {
 
 
     try {
-      final Path dataFile = Paths.get("data.json");
       final byte[] dataBytes = data.toString().getBytes();
 
-      Files.write(dataFile, dataBytes, CREATE, WRITE);
+      Files.write(output, dataBytes, CREATE, WRITE);
       log.info(String.format("Copied %d records", data.size()));
 
       return TaskResult.SUCCESS;

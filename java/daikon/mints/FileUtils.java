@@ -1,7 +1,6 @@
 package daikon.mints;
 
 import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import daikon.FileIO;
 import daikon.PptMap;
@@ -30,6 +29,10 @@ import java.util.stream.Collectors;
  * @author Huascar Sanchez
  */
 class FileUtils {
+
+  private static final PathMatcher MATCHER = FileSystems.getDefault()
+    .getPathMatcher("glob:*.json");
+
   private FileUtils(){}
 
 
@@ -117,6 +120,10 @@ class FileUtils {
     final File location = directory.toFile();
 
     return findFiles(location, Log.verbose(), "gz", /*skip dtrace.gz files*/"dtrace");
+  }
+
+  static boolean isJsonfile(Path file){
+    return MATCHER.matches(file);
   }
 
   /**

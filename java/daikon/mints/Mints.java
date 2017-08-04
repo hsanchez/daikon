@@ -31,7 +31,14 @@ class Mints {
    */
   private boolean runMain(String... args){
     final CommandLineParseResult result = CommandLineParseResult.parse(args);
-    result.throwParsingErrors();
+
+    try {
+      result.throwParsingErrors();
+    } catch (Exception ignored){
+      result.printUsage();
+      return false;
+    }
+
 
     return run(result.createRequest());
   }

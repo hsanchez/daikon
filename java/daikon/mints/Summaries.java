@@ -27,12 +27,12 @@ class Summaries {
    * @param pptMap program point map
    * @return a new list of summary objects.
    */
-  static List<SequenceSummary> from(PptMap pptMap) {
-    return from(pptMap, true);
+  static List<SequenceSummary> from(PptMap pptMap, boolean pruning) {
+    return from(pptMap, true, pruning);
   }
 
   @SuppressWarnings("SameParameterValue")
-  private static List<SequenceSummary> from(PptMap pptMap, boolean skipWarning) {
+  private static List<SequenceSummary> from(PptMap pptMap, boolean skipWarning, boolean pruning) {
     if (Objects.isNull(pptMap)) return Collections.emptyList();
 
     final List<SequenceSummary> result = new LinkedList<>();
@@ -70,7 +70,8 @@ class Summaries {
         skipWarning
       );
 
-      final List<Invariant> validOnes = LongestRepeated.sublist(filtered);
+      // Interesting group invariants in each Java method
+      final List<Invariant> validOnes = pruning ? Motif.sequence(filtered) : filtered;
 
       if (!segmentMap.containsKey(descriptor)) {
         final SequenceSummary sequence = new SequenceSummary(descriptor);

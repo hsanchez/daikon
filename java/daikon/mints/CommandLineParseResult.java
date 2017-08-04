@@ -11,32 +11,19 @@ import java.util.*;
  */
 public class CommandLineParseResult {
 
+  private static final String PATTERNS = "patterns.json";
+  private static final String DATA     = "data.json";
+
   private static final Set<String> NON_BOOLEAN_OPTIONS;
   private static final Set<String> BOOLEAN_OPTIONS;
+  private static final Set<String> MODES;
+  private static final Set<String> STRATEGIES;
 
   static {
-    final Set<String> bo = new HashSet<>();
-    bo.add("-p");
-    bo.add("--patterns");
-    bo.add("-h");
-    bo.add("--help");
-    bo.add("-q");
-    bo.add("--quiet");
-
-    BOOLEAN_OPTIONS = Immutable.setOf(bo);
-
-    final Set<String> nbo = new HashSet<>();
-    nbo.add("-f");
-    nbo.add("--from");
-
-    nbo.add("-i");
-    nbo.add("--in");
-
-    // TODO(Huascar) finish this once we have a stable implementation
-    //nbo.add("-t");
-    //nbo.add("--to");
-
-    NON_BOOLEAN_OPTIONS = Immutable.setOf(nbo);
+    BOOLEAN_OPTIONS = Immutable.setOf(Arrays.asList("-v", "--verbose", "-p", "--prune-seqs"));
+    NON_BOOLEAN_OPTIONS = Immutable.setOf(Arrays.asList("-m", "--mode", "-i", "--invoke-with"));
+    MODES = Immutable.setOf(Arrays.asList("setup", "mine"));
+    STRATEGIES = Immutable.setOf(Arrays.asList("baseline", "pim"));
   }
 
   // declare private class level variables
@@ -80,8 +67,55 @@ public class CommandLineParseResult {
    * Returns a list of the positional arguments left over after processing all options.
    */
   public static CommandLineParseResult parse(String[] args) {
-    return new CommandLineParseResult(Arrays.asList(args).iterator());
+    final List<String> argList = Arrays.asList(args);
+    final CommandLineParseResult result = new CommandLineParseResult(argList.iterator());
+    if(argList.isEmpty()) result.parsingErrors.add(new IllegalArgumentException("Missing Mints [options]"));
+    return result;
   }
+
+  void printUsage(){
+    reset();
+
+    System.out.println("Usage: Mints [options]... [args]...");
+    System.out.println();
+    System.out.println("  <args>: arguments passed to the target mode: ");
+    System.out.println("      .json input file (or directory containing .gz files), and ");
+    System.out.println("      an output JSON file.");
+    System.out.println();
+    System.out.println("      This should a file containing previously-generated Daikon invariants, ");
+    System.out.println("      a directory containing .gz files produced by Daikon,");
+    System.out.println("      and an output JSON file persisting.");
+    System.out.println();
+    System.out.println("OPTIONS");
+    System.out.println("  --mode <setup|mine>: specify which mode to run in.");
+    System.out.println("      setup: maps daikon-produced .gz files to a JSON data file.");
+    System.out.println("      mine: discover invariant patterns in JSON data file.");
+    System.out.println();
+    System.out.println("      E.g.,  ");
+    System.out.println("      --mode setup data/ to/data.json");
+    System.out.println("      --mode mine from/data.json dir/to/patterns.json");
+    System.out.println();
+    System.out.println("  --prune-seqs: prune method invariants. Examples:");
+    System.out.println("      --mode setup --prune-seqs from/data/ to/data.json");
+    System.out.println();
+    System.out.println("      Default value: false");
+    System.out.println();
+    System.out.println("  --invoke-with <baseline|pim>: specify a strategy for mining invariants sequences. Examples:");
+    System.out.println("      --mode mine --invoke-with baseline");
+    System.out.println("      --mode mine --invoke-with pim");
+    System.out.println();
+    System.out.println("      Default value: baseline.");
+    System.out.println();
+    System.out.println("  --verbose: turn on persistent verbose output.");
+    System.out.println();
+  }
+
+  private void reset(){
+    arguments.clear();
+    leftovers.clear();
+    parsingErrors.clear();
+  }
+
 
   /**
    *
@@ -91,71 +125,99 @@ public class CommandLineParseResult {
    */
   Request createRequest(){
 
-    final Log log = quiteLogging() ? Log.quiet() : Log.verbose();
+    final Log log = verboseLogging() ? Log.verbose() : Log.quiet();
+    Errors.throwNewMissingInputs(!getLeftovers().isEmpty());
 
-    if(containsPatternsOption()){
-      if(!containsInputFileOption()){
-        throw new ParsingException(
-          Collections.singletonList(new IllegalStateException("Missing (-i | --in) input file."))
-        );
+    final List<Path> optionArgs = Immutable.listOf(
+      getLeftovers().stream().limit(2).map(a -> Paths.get(a)));
+
+    if(inMiningMode()){
+      if(pruningEnabled()){
+        log.warn("Ignoring unnecessary (-p|--prune-seqs) option.");
       }
 
-      final Path jsonFile = Paths.get(getValue("-i", "--in"));
-      if(!Files.exists(jsonFile)){
-        throw new ParsingException(
-          Collections.singletonList(new IllegalStateException("Not found input file."))
-        );
+
+      final String invokedWith = (containsInvokeStrategy())
+        ? getValue("-i", "--invoke-with") : "baseline";
+
+      Errors.throwInvalidStrategy(STRATEGIES.contains(invokedWith), invokedWith);
+
+      final Path inputFile = optionArgs.get(0);
+
+      Errors.throwInvalidFile(FileUtils.isJsonfile(inputFile), inputFile);
+      Errors.throwNewMissingInputFile(Files.exists(inputFile));
+
+      if(optionArgs.size() == 1){
+        optionArgs.add(inputFile.getParent().resolve(PATTERNS));
       }
 
-      return Request.patterns(jsonFile, log);
+      final Path outputFile = optionArgs.get(1);
+      Errors.throwInvalidFile(FileUtils.isJsonfile(outputFile), outputFile);
+
+      if(Files.exists(outputFile)){
+        log.info(String.format("Deleting %s file", outputFile));
+        FileUtils.deleteFile(outputFile);
+      }
+
+      return Request.interestingPatterns(invokedWith, inputFile, outputFile, log);
+
     } else {
+      Errors.throwNewMissingSetupMode(inSetupMode());
 
-      if(containsRequiredOptions()){
+      final Path inputDir = optionArgs.get(0);
+      Errors.throwNewMissingInputDir(Files.isDirectory(inputDir) && Files.exists(inputDir));
 
-        final Path from = Paths.get(getValue("-f", "--from"));
-        //final Path to   = Paths.get(getValue("-t", "--to"));
-
-        final Path dataFile = Paths.get("data.json");
-        if(Files.exists(dataFile)){
-          log.info("Deleting content already created data.json file.");
-          FileUtils.deleteFile(dataFile);
-        }
-
-        return Request.invariantsData(from, log);
+      if(optionArgs.size() == 1){
+        optionArgs.add(Paths.get(DATA));
       }
 
-      throw new ParsingException(
-        Collections.singletonList(
-          new IllegalStateException(
-            "Missing (-f | --from) and (-t | --to) options"
-          )
-        )
-      );
+      final Path outputFile = optionArgs.get(1);
+      Errors.throwInvalidFile(FileUtils.isJsonfile(outputFile), outputFile);
 
+      if(Files.exists(outputFile)){
+        log.info(String.format("Deleting %s file", outputFile));
+        FileUtils.deleteFile(outputFile);
+      }
+
+      final boolean pruningEnabled = pruningEnabled();
+
+      return Request.invariantsData(inputDir, outputFile, pruningEnabled, log);
     }
 
   }
 
-  private boolean quiteLogging(){
-    return (arguments.containsKey("--quiet")
-      || arguments.containsKey("-q"));
+  private boolean verboseLogging(){
+    final boolean keyExist = (containsKey("--verbose") || containsKey("-v"));
+
+    return keyExist || Boolean.valueOf(getValue("-v", "--verbose"));
   }
 
-  private boolean containsPatternsOption(){
-    return (arguments.containsKey("--patterns")
-      || arguments.containsKey("-p"));
+  private boolean pruningEnabled(){
+    final boolean keyExist = (containsKey("--prune-seqs") || containsKey("-p"));
+
+    return keyExist || Boolean.valueOf(getValue("-p", "--prune-seqs"));
   }
 
-  private boolean containsInputFileOption(){
-    return (arguments.containsKey("--in")
-      || arguments.containsKey("-i"));
+  private boolean inSetupMode(){
+    final String value = getValue("-m", "--mode");
+    return containsRequiredOptions()
+      && (MODES.contains(value) && value.equals("setup"));
+  }
+
+  private boolean inMiningMode(){
+    final String value = getValue("-m", "--mode");
+    return containsRequiredOptions()
+      && (MODES.contains(value) && value.equals("mine"));
   }
 
   private boolean containsRequiredOptions(){
-    return ((arguments.containsKey("--from")
-      || arguments.containsKey("-f")));
-//      && (arguments.containsKey("--to")
-//      || arguments.containsKey("-t")));
+    return ((containsKey("--mode")
+      || containsKey("-m")));
+  }
+
+  private boolean containsInvokeStrategy(){
+    return ((containsKey("--invoke-with")
+      || containsKey("-i")));
   }
 
   /**
@@ -179,7 +241,7 @@ public class CommandLineParseResult {
   /**
    * @return a list of the positional arguments left over after processing all options.
    */
-  public List<String> getLeftovers(){
+  private List<String> getLeftovers(){
     return Immutable.listOf(leftovers);
   }
 
@@ -297,7 +359,7 @@ public class CommandLineParseResult {
     }
   }
 
-  private static class ParsingException extends RuntimeException {
+  static class ParsingException extends RuntimeException {
 
     ParsingException(Collection<Throwable> throwables){
       super(createErrorMessage(throwables));

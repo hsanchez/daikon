@@ -12,19 +12,36 @@ import java.util.stream.Collectors;
 abstract class Inference {
 
   /**
+   * Examines a sequence of invariants sequences in order
+   * to discover patterns of likely invariants.
    *
-   * @param from
-   * @return
+   * @param from data
+   * @return the pattern
    */
   abstract List<Record> examine(List<List<Record>> from);
 
   /**
+   * This strategy finds the longest subsequence of invariants common to all sequences
+   * of invariants in a list of sequences (known as Multiple Longest Common
+   * Subsequence--MLCS--problem). MLCS is an NP-hard problem. Consequently, we use a
+   * dominant-subsequence algorithm for getting an approximate solution to MLCS.
    *
-   * @param from
-   * @return
+   * @param inAllSequences the list of invariant lists.
+   * @return a pattern of likely invariants.
    */
-  static List<Record> commonSubList(List<List<Record>> from){
-    return new CommonSublistInference().examine(from);
+  static List<Record> commonSubsequence(List<List<Record>> inAllSequences){
+    return new CommonSublistInference().examine(inAllSequences);
+  }
+
+  /**
+   *
+   * TODO(Huascar): describe model
+   *
+   * @param inAllSequences the list of invariant lists.
+   * @return a pattern of interesting likely invariants.
+   */
+  static List<Record> pim(List<List<Record>> inAllSequences){
+    return Immutable.emptyList();
   }
 
 
@@ -34,12 +51,15 @@ abstract class Inference {
    * N lists of records.
    */
   static class CommonSublistInference extends Inference {
+
+    static final int DEFAULT_VALUE = 20;
+
     @Override List<Record> examine(List<List<Record>> from) {
       if(from.isEmpty()) return Immutable.emptyList();
       if(from.size() == 1) return from.get(0);
 
       final OptionalDouble avg = from.stream().mapToInt(List::size).average();
-      final double avgAsDouble = avg.isPresent() ? avg.getAsDouble() : 20.0;
+      final double avgAsDouble = avg.isPresent() ? avg.getAsDouble() : DEFAULT_VALUE;
 
       int pivot = (int) avgAsDouble;
 
@@ -68,38 +88,6 @@ abstract class Inference {
       }
 
       return LCS;
-
-//      from = from.stream().filter(s -> s.size() > 10).collect(Collectors.toList());
-//
-//      List<Record> common = new ArrayList<>();
-//      List<Record> small  = from.get(0);
-//
-//      // identify smallest sequence of records
-//      for(List<Record> each : from){
-//        if(each.size() < small.size()){
-//          small = each;
-//        }
-//      }
-//
-//      List<Record> commonTemp = new ArrayList<>();
-//      for(Record eachX : small){
-//
-//        commonTemp.add(eachX);
-//
-//        for(List<Record> eachY : from){
-//          if(!containsAll(eachY, commonTemp)){
-//            commonTemp = new ArrayList<>();
-//            break;
-//          }
-//        }
-//
-//        if(!commonTemp.isEmpty() && commonTemp.size() > common.size()){
-//          common = new ArrayList<>(commonTemp);
-//        }
-//
-//      }
-//
-//      return common;
     }
 
     private static boolean foundLcs(List<Record> subSeq, List<List<Record>> trimmed){

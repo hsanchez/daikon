@@ -9,20 +9,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Inspired by http://algs4.cs.princeton.edu/63suffix/LongestRepeatedSubstring.java.html,
- * but instead of dealing with sub-strings, we are dealing with sub-lists. Some
- * implementation considerations (related to dealing with lists) were taken into
- * account.
+ * Helper methods for finding the Motif (see https://en.wikipedia.org/wiki/Sequence_motif)
+ * of a sequence of invariants.
  *
  * @author Huascar Sanchez
  */
-class LongestRepeated {
+class Motif {
   /**
-   * Gets the longest repeated sub list.
-   * @param longList the list of Daikon-produced invariants.
+   * Gets a sequence motif, which recurring patterns (sub-strings) in
+   * a sequence of invariants.
+   *
+   * @param longList a sequence of Daikon-produced invariants.
    * @return a new sublist.
    */
-  static List<Invariant> sublist(List<Invariant> longList){
+  static List<Invariant> sequence(List<Invariant> longList){
     if(longList.isEmpty()) return longList;
 
     final int n = longList.size();
