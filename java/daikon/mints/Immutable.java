@@ -3,9 +3,7 @@ package daikon.mints;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,29 +40,6 @@ public class Immutable {
 
 
   /**
-   * Converts a mutable map into an immutable one.
-   *
-   * @param map mutable map
-   * @param <K> the output type of the key mapping function
-   * @param <V> the output type of the value mapping function
-   * @return a new immutable map
-   */
-  public static <K, V> Map<K, V> mapOf(Map<? extends K, ? extends V> map){
-    return mapOf(map.entrySet().stream());
-  }
-
-  /**
-   * Converts a stream of Map.Entry objects into an immutable map.
-   * @param stream stream of Map.Entry object.s
-   * @param <K> the output type of the key mapping function
-   * @param <V> the output type of the value mapping function
-   * @return a new immutable map
-   */
-  private static <K, V> Map<K, V> mapOf(Stream<? extends Map.Entry<? extends K, ? extends V>> stream){
-    return stream.collect(toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
-  }
-
-  /**
    * Converts a mutable set into an immutable one.
    * @param list mutable set
    * @param <T> type parameter
@@ -82,26 +57,6 @@ public class Immutable {
    */
   public static <T> Set<T> setOf(Stream<? extends T> stream){
     return stream.collect(toImmutableSet());
-  }
-
-  /**
-   * Creates a collector that transforms a mutable map into an immutable map.
-   *
-   * @param keyExtractor a mapping function to produce keys
-   * @param valueExtractor a mapping function to produce values
-   * @param <T> the type of the input elements
-   * @param <K> the output type of the key mapping function
-   * @param <V> the output type of the value mapping function
-   * @return a new immutable map
-   */
-  private static <T, K, V> Collector<T, ?, Map<K, V>> toImmutableMap(
-    final Function<? super T, ? extends K> keyExtractor,
-    final Function<? super T, ? extends V> valueExtractor){
-
-    return Collectors.collectingAndThen(
-      Collectors.toMap(keyExtractor, valueExtractor),
-      Collections::unmodifiableMap
-    );
   }
 
   /**

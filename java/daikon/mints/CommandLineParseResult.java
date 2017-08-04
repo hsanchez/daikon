@@ -361,6 +361,8 @@ public class CommandLineParseResult {
 
   static class ParsingException extends RuntimeException {
 
+    static final long serialVersionUID = 1L;
+
     ParsingException(Collection<Throwable> throwables){
       super(createErrorMessage(throwables));
 

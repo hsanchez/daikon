@@ -69,6 +69,8 @@ class Errors {
   }
 
   private static class ConfigurationError extends RuntimeException {
+    static final long serialVersionUID = 1L;
+
     ConfigurationError(Throwable cause){
       super(cause);
     }
