@@ -40,7 +40,7 @@ class Summaries {
     final Map<SummaryDescriptor, SequenceSummary> segmentMap = new HashMap<>();
 
     for (String eachKey : pptMap.nameStringSet()) {
-      // ignore Randoop & JUnit related artifacts
+      // ignore both Randoop & JUnit specific artifacts
       if (eachKey.contains("BuildersRegression")) continue;
       if (eachKey.contains("RegressionTestDriver")) continue;
       if (eachKey.contains("org.junit.")) continue;

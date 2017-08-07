@@ -9,7 +9,7 @@ class Errors {
 
   private static final String MISSING_INPUT     = "Missing input %s %s";
   private static final String MISSING_MODE      = "Missing %s mode.";
-  private static final String INVALID_STRATEGY  = "Invalid %s mining strategy.";
+  private static final String INVALID_STRATEGY  = "Invalid %s strategy.";
   private static final String INVALID_FILE      = "Invalid %s file extension.";
 
 
@@ -23,8 +23,8 @@ class Errors {
     if(!trueCondition) throw new ConfigurationError(newInvalidFileExtension(file));
   }
 
-  static void throwNewMissingSetupMode(boolean trueCondition){
-    if(!trueCondition) throw new ConfigurationError(newMissingMode("setup"));
+  static void throwNewMissingSimMode(boolean trueCondition){
+    if(!trueCondition) throw new ConfigurationError(newMissingMode("sim"));
   }
 
   static void throwNewMissingInputs(boolean trueCondition){
@@ -39,7 +39,7 @@ class Errors {
     throwNewMissingInput(trueCondition, "data", "dir");
   }
 
-  private static void throwNewMissingInput(boolean trueCondition, String name, String leftover){
+  static void throwNewMissingInput(boolean trueCondition, String name, String leftover){
     if(!trueCondition) throw new ConfigurationError(newMissingInputException("<" + name + ">", leftover));
   }
 

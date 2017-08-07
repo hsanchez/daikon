@@ -1,10 +1,5 @@
 package daikon.mints;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -67,28 +62,4 @@ public class Strings {
     return toString.toString();
   }
 
-  private static String readFromInputStream(InputStream inputStream) throws IOException {
-    StringBuilder content = new StringBuilder();
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
-      String line;
-      while ((line = br.readLine()) != null) {
-        content.append(line).append("\n");
-      }
-    }
-
-    return content.toString();
-  }
-
-  static String fetchContent(URL url) {
-    try {
-
-      final InputStream is = (InputStream) url.getContent();
-
-      assert !Objects.isNull(is);
-
-      return readFromInputStream(is);
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
-    }
-  }
 }

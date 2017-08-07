@@ -55,7 +55,7 @@ abstract class Request {
   /**
    * Find interesting sequence of likely invariants.
    *
-   * @param invokeWith mining strategy (baseline | pim)
+   * @param invokeWith mining strategy (mlcs | pim)
    * @param jsonFile data.json file produced by {@link #invariantsData(Path, Path, boolean, Log)}
    * @param outFile file where output will be written.
    * @param log log object
@@ -63,6 +63,17 @@ abstract class Request {
    */
   static Request interestingPatterns(String invokeWith, Path jsonFile, Path outFile, Log log){
     return new PatternsRequest(invokeWith, jsonFile, outFile, log);
+  }
+
+  /**
+   *
+   * @param invokeWith
+   * @param paths
+   * @param log
+   * @return
+   */
+  static Request similarMethods(String invokeWith, List<Path> paths, Log log){
+    return new SimRequest(invokeWith, paths, log);
   }
 
 
@@ -141,7 +152,7 @@ abstract class Request {
   }
 
   static class PatternsRequest extends Request {
-    private static final String BASELINE  = "baseline";
+    private static final String BASELINE  = "mlcs";
     private static final String PIM       = "pim";
 
     private final String  command;
@@ -162,7 +173,7 @@ abstract class Request {
       final List<List<Record>> allRecords = new ArrayList<>();
       records.entrySet().forEach(e -> allRecords.add(e.getValue()));
 
-      final List<Record> interestingRecords = invokeWith(command, allRecords);
+      final List<Record> interestingRecords = invokeWith(command, allRecords, log);
       log.info(String.format("Pattern size: %d", interestingRecords.size()));
       log.info(String.format("Updated %s", outFile.toString()));
 
@@ -196,10 +207,10 @@ abstract class Request {
       }
     }
 
-    private static List<Record> invokeWith(String command, List<List<Record>> allRecords){
+    private static List<Record> invokeWith(String command, List<List<Record>> allRecords, Log log){
       switch (command){
         case BASELINE:
-          return Inference.commonSubsequence(allRecords);
+          return Inference.commonSubsequence(allRecords, log);
         case PIM:
           return Inference.pim(allRecords);
         default:
@@ -221,6 +232,26 @@ abstract class Request {
 
     @Override public String toString() {
       return "Patterns discovery request";
+    }
+  }
+
+  static class SimRequest extends Request {
+    private final String invokeWith;
+    private final List<Path> paths;
+    private final Log log;
+
+    SimRequest(String invokeWith, List<Path> paths, Log log){
+      this.invokeWith = invokeWith;
+      this.paths      = paths;
+      this.log        = log;
+    }
+
+    @Override void fulfill() {
+      log.info("Fulfilled!");
+    }
+
+    @Override Log getLog() {
+      return log;
     }
   }
 }

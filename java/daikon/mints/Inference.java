@@ -29,8 +29,10 @@ abstract class Inference {
    * @param inAllSequences the list of invariant lists.
    * @return a pattern of likely invariants.
    */
-  static List<Record> commonSubsequence(List<List<Record>> inAllSequences){
-    return new CommonSublistInference().examine(inAllSequences);
+  static List<Record> commonSubsequence(List<List<Record>> inAllSequences, Log log){
+    final Inference request = new CommonSublistInference();
+    log.info(String.format("Running %s invoke strategy.", request));
+    return request.examine(inAllSequences);
   }
 
   /**
@@ -101,6 +103,10 @@ abstract class Inference {
 
     private static boolean containsAll(List<Record> eachY, List<Record> common){
       return eachY.containsAll(common);
+    }
+
+    @Override public String toString() {
+      return "mlcs";
     }
   }
 

@@ -6,24 +6,44 @@ import java.nio.file.Paths;
 import java.util.*;
 
 /**
- * A class of methods useful when reading arguments
+ * A class of methods that are useful when reading arguments
  * from the command line
+ *
+ * @author Huascar Sanchez
  */
 public class CommandLineParseResult {
+  // modes
+  private static final String MINE_MODE = "mine";
+  private static final String PREP_MODE = "prep";
+  private static final String SIM_MODE  = "sim";
 
+  // run strategies for sim mode
+  private static final String KM     = "km"; // kmeans
+  private static final String DBC    = "dbc";// distributed based clustering
+
+  // run strategies for mine mode
+  private static final String MLCS   = "mlcs";
+  private static final String PIM    = "pim";
+
+  // data files
   private static final String PATTERNS = "patterns.json";
   private static final String DATA     = "data.json";
 
   private static final Set<String> NON_BOOLEAN_OPTIONS;
   private static final Set<String> BOOLEAN_OPTIONS;
   private static final Set<String> MODES;
-  private static final Set<String> STRATEGIES;
+  private static final Map<String, Set<String>> STRATEGIES;
 
   static {
     BOOLEAN_OPTIONS = Immutable.setOf(Arrays.asList("-v", "--verbose", "-p", "--prune-seqs"));
     NON_BOOLEAN_OPTIONS = Immutable.setOf(Arrays.asList("-m", "--mode", "-i", "--invoke-with"));
-    MODES = Immutable.setOf(Arrays.asList("setup", "mine"));
-    STRATEGIES = Immutable.setOf(Arrays.asList("baseline", "pim"));
+    MODES = Immutable.setOf(Arrays.asList(PREP_MODE, MINE_MODE, SIM_MODE));
+
+    final Map<String, Set<String>> map = new HashMap<>();
+    map.put(MINE_MODE, Immutable.setOf(Arrays.asList(MLCS, PIM)));
+    map.put(SIM_MODE, Immutable.setOf(Arrays.asList(KM, DBC)));
+
+    STRATEGIES = Collections.unmodifiableMap(map);
   }
 
   // declare private class level variables
@@ -87,24 +107,30 @@ public class CommandLineParseResult {
     System.out.println("      and an output JSON file persisting.");
     System.out.println();
     System.out.println("OPTIONS");
-    System.out.println("  --mode <setup|mine>: specify which mode to run in.");
-    System.out.println("      setup: maps daikon-produced .gz files to a JSON data file.");
-    System.out.println("      mine: discover invariant patterns in JSON data file.");
+    System.out.println("  --mode <prep|mine|sim>: specify which mode to run in.");
+    System.out.println("      prep: persists content of daikon-produced .gz files into a JSON data file.");
+    System.out.println("      mine: examines JSON data file to discover invariant patterns.");
+    System.out.println("      sim:  examines multiple JSON data files to find similar methods.");
     System.out.println();
     System.out.println("      E.g.,  ");
-    System.out.println("      --mode setup data/ to/data.json");
+    System.out.println("      --mode prep data/ to/data.json");
     System.out.println("      --mode mine from/data.json dir/to/patterns.json");
+    System.out.println("      --mode sim [from/data.json]... dir/to/sims.json");
     System.out.println();
     System.out.println("  --prune-seqs: prune method invariants. Examples:");
-    System.out.println("      --mode setup --prune-seqs from/data/ to/data.json");
+    System.out.println("      --mode prep --prune-seqs from/data/ to/data.json");
     System.out.println();
     System.out.println("      Default value: false");
     System.out.println();
-    System.out.println("  --invoke-with <baseline|pim>: specify a strategy for mining invariants sequences. Examples:");
-    System.out.println("      --mode mine --invoke-with baseline");
-    System.out.println("      --mode mine --invoke-with pim");
+    System.out.println("  --invoke-with <mlcs|pim|km|dbc>: invoke a strategy for (mine|sim) modes. Examples:");
+    System.out.println("      --mode mine --invoke-with mlcs");
+    System.out.println("      --mode sim --invoke-with km");
     System.out.println();
-    System.out.println("      Default value: baseline.");
+    System.out.println("      <mlcs|pim>: available strategies for the mine mode.");
+    System.out.println("      <km|dbc>: available strategies for the sim mode.");
+    System.out.println();
+    System.out.println("      Default value for mine mode: mlcs");
+    System.out.println("      Default value for sim mode: km");
     System.out.println();
     System.out.println("  --verbose: turn on persistent verbose output.");
     System.out.println();
@@ -128,19 +154,23 @@ public class CommandLineParseResult {
     final Log log = verboseLogging() ? Log.verbose() : Log.quiet();
     Errors.throwNewMissingInputs(!getLeftovers().isEmpty());
 
-    final List<Path> optionArgs = Immutable.listOf(
-      getLeftovers().stream().limit(2).map(a -> Paths.get(a)));
+    List<Path> optionArgs = Immutable.listOf(
+      getLeftovers().stream().map(a -> Paths.get(a)));
 
     if(inMiningMode()){
+
+      // this option supports up to 2 leftovers.
+      optionArgs = Immutable.listOf(optionArgs.stream().limit(2));
+
       if(pruningEnabled()){
         log.warn("Ignoring unnecessary (-p|--prune-seqs) option.");
       }
 
 
       final String invokedWith = (containsInvokeStrategy())
-        ? getValue("-i", "--invoke-with") : "baseline";
+        ? getValue("-i", "--invoke-with") : MLCS;
 
-      Errors.throwInvalidStrategy(STRATEGIES.contains(invokedWith), invokedWith);
+      Errors.throwInvalidStrategy(inMineStrategies(invokedWith), MINE_MODE + " " + invokedWith);
 
       final Path inputFile = optionArgs.get(0);
 
@@ -161,8 +191,9 @@ public class CommandLineParseResult {
 
       return Request.interestingPatterns(invokedWith, inputFile, outputFile, log);
 
-    } else {
-      Errors.throwNewMissingSetupMode(inSetupMode());
+    } else if (inPrepMode()){
+
+      Errors.throwNewMissingSimMode(isSimMode());
 
       final Path inputDir = optionArgs.get(0);
       Errors.throwNewMissingInputDir(Files.isDirectory(inputDir) && Files.exists(inputDir));
@@ -182,26 +213,57 @@ public class CommandLineParseResult {
       final boolean pruningEnabled = pruningEnabled();
 
       return Request.invariantsData(inputDir, outputFile, pruningEnabled, log);
+    } else {
+      Errors.throwNewMissingSimMode(isSimMode());
+
+      final String invokedWith = (containsInvokeStrategy())
+        ? getValue("-i", "--invoke-with") : KM;
+
+      Errors.throwInvalidStrategy(inSimStrategies(invokedWith), SIM_MODE + " " + invokedWith);
+
+      Errors.throwNewMissingInput(optionArgs.size() > 2, "(s)", "--2 inputs required.");
+
+      if(pruningEnabled()){
+        log.warn("Ignoring unnecessary (-p|--prune-seqs) option.");
+      }
+
+      return Request.similarMethods(invokedWith, optionArgs, log);
     }
 
+  }
+
+  private static boolean inMineStrategies(String command){
+    return STRATEGIES.get(MINE_MODE).contains(command);
+  }
+
+  private static boolean inSimStrategies(String command){
+    return STRATEGIES.get(SIM_MODE).contains(command);
   }
 
   private boolean verboseLogging(){
     final boolean keyExist = (containsKey("--verbose") || containsKey("-v"));
 
-    return keyExist || Boolean.valueOf(getValue("-v", "--verbose"));
+    if(keyExist){
+      return Boolean.valueOf(getValue("-v", "--verbose"));
+    } else {
+      return false;
+    }
   }
 
   private boolean pruningEnabled(){
     final boolean keyExist = (containsKey("--prune-seqs") || containsKey("-p"));
 
-    return keyExist || Boolean.valueOf(getValue("-p", "--prune-seqs"));
+    if(keyExist){
+      return Boolean.valueOf(getValue("-p", "--prune-seqs"));
+    } else {
+      return false;
+    }
   }
 
-  private boolean inSetupMode(){
+  private boolean inPrepMode(){
     final String value = getValue("-m", "--mode");
     return containsRequiredOptions()
-      && (MODES.contains(value) && value.equals("setup"));
+      && (MODES.contains(value) && value.equals("prep"));
   }
 
   private boolean inMiningMode(){
@@ -209,6 +271,11 @@ public class CommandLineParseResult {
     return containsRequiredOptions()
       && (MODES.contains(value) && value.equals("mine"));
   }
+
+  private boolean isSimMode(){
+    return true;
+  }
+
 
   private boolean containsRequiredOptions(){
     return ((containsKey("--mode")
@@ -229,7 +296,9 @@ public class CommandLineParseResult {
   public boolean containsKey(String key) {
 
     // check to ensure the key is valid
-    if(isValid(key) && (BOOLEAN_OPTIONS.contains(key) || NON_BOOLEAN_OPTIONS.contains(key))) {
+    if(isValid(key) && (BOOLEAN_OPTIONS.contains(key)
+      || NON_BOOLEAN_OPTIONS.contains(key))) {
+
       return arguments.get(key) != null;
     }
 
