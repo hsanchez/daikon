@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 /**
  * @author Huascar Sanchez
  */
-abstract class Inference {
+abstract class Analysis {
 
   /**
    * Examines a sequence of invariants sequences in order
@@ -30,14 +30,14 @@ abstract class Inference {
    * @return a pattern of likely invariants.
    */
   static List<Record> commonSubsequence(List<List<Record>> inAllSequences, Log log){
-    final Inference request = new CommonSublistInference();
+    final Analysis request = new CommonSublistAnalysis();
     log.info(String.format("Running %s invoke strategy.", request));
     return request.examine(inAllSequences);
   }
 
   /**
    *
-   * TODO(Huascar): describe model
+   * TODO(Huascar): describe (and then implement) the interleaved sequence model.
    *
    * @param inAllSequences the list of invariant lists.
    * @return a pattern of interesting likely invariants.
@@ -52,7 +52,7 @@ abstract class Inference {
    * for N strings, this class implements the longest common subsequence for
    * N lists of records.
    */
-  static class CommonSublistInference extends Inference {
+  static class CommonSublistAnalysis extends Analysis {
 
     static final int DEFAULT_VALUE = 20;
 
@@ -77,19 +77,19 @@ abstract class Inference {
         .collect(Collectors.toList());
 
       int j = 0;
-      List<Record> LCS = new ArrayList<>();
+      List<Record> lcs = new ArrayList<>();
       for(int i = smallest.size(); i > 2; i--){
         j = j + 1;
 
         List<Record> subSeq; for(int s = 0; s < j; s++){
           subSeq = smallest.subList(s, j);
-          if(foundLcs(subSeq, trimmed) && subSeq.size() > LCS.size() ){
-            LCS = subSeq;
+          if(foundLcs(subSeq, trimmed) && subSeq.size() > lcs.size() ){
+            lcs = subSeq;
           }
         }
       }
 
-      return LCS;
+      return lcs;
     }
 
     private static boolean foundLcs(List<Record> subSeq, List<List<Record>> trimmed){

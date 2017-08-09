@@ -12,7 +12,7 @@ class CommandLineConst {
 
   // run strategies for sim mode
   static final String KM     = "km"; // kmeans
-  static final String DBC    = "dbc";// distributed based clustering
+  static final String SAC    = "sac";// Simulated Annealing Clustering
 
   // run strategies for mine mode
   static final String MLCS   = "mlcs";

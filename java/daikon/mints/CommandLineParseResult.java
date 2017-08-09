@@ -5,7 +5,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import static daikon.mints.CommandLineConst.*;
+import static daikon.mints.CommandLineConst.DATA;
+import static daikon.mints.CommandLineConst.KM;
+import static daikon.mints.CommandLineConst.MINE_MODE;
+import static daikon.mints.CommandLineConst.MLCS;
+import static daikon.mints.CommandLineConst.PATTERNS;
+import static daikon.mints.CommandLineConst.PIM;
+import static daikon.mints.CommandLineConst.PREP_MODE;
+import static daikon.mints.CommandLineConst.SAC;
+import static daikon.mints.CommandLineConst.SIM_MODE;
 
 /**
  * A class of methods that are useful when reading arguments
@@ -27,7 +35,7 @@ public class CommandLineParseResult {
 
     final Map<String, Set<String>> map = new HashMap<>();
     map.put(MINE_MODE, Immutable.setOf(Arrays.asList(MLCS, PIM)));
-    map.put(SIM_MODE, Immutable.setOf(Arrays.asList(KM, DBC)));
+    map.put(SIM_MODE, Immutable.setOf(Arrays.asList(KM, SAC)));
 
     STRATEGIES = Collections.unmodifiableMap(map);
   }
@@ -209,6 +217,13 @@ public class CommandLineParseResult {
 
       if(pruningEnabled()){
         log.warn("Ignoring unnecessary (-p|--prune-seqs) option.");
+      }
+
+      if(optionArgs.size() > 2){
+        if(Files.exists(optionArgs.get(optionArgs.size() - 1))){
+          log.info(String.format("Deleting %s file", optionArgs.get(optionArgs.size() - 1)));
+          FileUtils.deleteFile(optionArgs.get(optionArgs.size() - 1));
+        }
       }
 
       return Request.similarMethods(invokedWith, optionArgs, log);

@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import static daikon.mints.CommandLineConst.DBC;
+import static daikon.mints.CommandLineConst.SAC;
 import static daikon.mints.CommandLineConst.KM;
 import static daikon.mints.CommandLineConst.MLCS;
 import static daikon.mints.CommandLineConst.PIM;
@@ -214,9 +214,9 @@ abstract class Request {
     private static List<Record> invokeWith(String command, List<List<Record>> allRecords, Log log){
       switch (command){
         case MLCS:
-          return Inference.commonSubsequence(allRecords, log);
+          return Analysis.commonSubsequence(allRecords, log);
         case PIM:
-          return Inference.pim(allRecords);
+          return Analysis.pim(allRecords);
         default:
           return Immutable.emptyList();
       }
@@ -268,7 +268,33 @@ abstract class Request {
 
       final List<Cluster> clusters = invokeWith(invokeWith, data, log);
 
-      log.info(String.format("Formed %d clusters", clusters.size()));
+      final JsonObject object = Json.object();
+
+      final JsonArray  array  = Json.array().asArray();
+
+      int count = 1; for(Cluster each : clusters){
+        final JsonObject jo = Json.object();
+        final JsonArray  ja = Json.array().asArray();
+
+        each.itemList().forEach(ja::add);
+
+        jo.add(String.valueOf(count), ja);
+
+        array.add(jo);
+
+        count++;
+      }
+
+      object.add("sims", array);
+
+      final byte[] dataBytes = object.toString().getBytes();
+
+      try {
+        Files.write(output, dataBytes, CREATE, WRITE);
+      } catch (IOException e) {
+        log.error(String.format("Unable to write %s.", output.toString()), e);
+      }
+
     }
 
     private static List<Cluster> invokeWith(String command, Map<String, List<Record>> data, Log log){
@@ -276,8 +302,8 @@ abstract class Request {
       switch (command){
         case KM:
           return Clustering.clusterWithKmeans(data, log);
-        case DBC:
-          return Immutable.emptyList();
+        case SAC:
+          return Clustering.clusterWithSimulatedAnnealing(data, log);
         default:
           return Immutable.emptyList();
       }
