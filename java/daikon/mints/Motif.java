@@ -16,10 +16,10 @@ import java.util.stream.Collectors;
  */
 class Motif {
   /**
-   * Gets a sequence motif, which recurring patterns (sub-strings) in
-   * a sequence of invariants.
+   * Gets a sequence motif, which are recurring patterns (sub-strings) in
+   * a sequence of invariant types.
    *
-   * @param longList a sequence of Daikon-produced invariants.
+   * @param longList a sequence of Daikon-produced invariants (types).
    * @return a new sublist.
    */
   static List<Invariant> sequence(List<Invariant> longList){

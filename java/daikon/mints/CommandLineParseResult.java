@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+import static daikon.mints.CommandLineConst.*;
+
 /**
  * A class of methods that are useful when reading arguments
  * from the command line
@@ -12,22 +14,6 @@ import java.util.*;
  * @author Huascar Sanchez
  */
 public class CommandLineParseResult {
-  // modes
-  private static final String MINE_MODE = "mine";
-  private static final String PREP_MODE = "prep";
-  private static final String SIM_MODE  = "sim";
-
-  // run strategies for sim mode
-  private static final String KM     = "km"; // kmeans
-  private static final String DBC    = "dbc";// distributed based clustering
-
-  // run strategies for mine mode
-  private static final String MLCS   = "mlcs";
-  private static final String PIM    = "pim";
-
-  // data files
-  private static final String PATTERNS = "patterns.json";
-  private static final String DATA     = "data.json";
 
   private static final Set<String> NON_BOOLEAN_OPTIONS;
   private static final Set<String> BOOLEAN_OPTIONS;
@@ -192,8 +178,6 @@ public class CommandLineParseResult {
       return Request.interestingPatterns(invokedWith, inputFile, outputFile, log);
 
     } else if (inPrepMode()){
-
-      Errors.throwNewMissingSimMode(isSimMode());
 
       final Path inputDir = optionArgs.get(0);
       Errors.throwNewMissingInputDir(Files.isDirectory(inputDir) && Files.exists(inputDir));

@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 public class Immutable {
   private Immutable(){}
 
-  public static <T> List<T> emptyList(){
+  static <T> List<T> emptyList(){
     return Immutable.listOf(Collections.emptyList());
   }
 
@@ -24,7 +24,7 @@ public class Immutable {
    * @param <T> type parameter
    * @return an immutable list.
    */
-  public static <T> List<T> listOf(Stream<? extends T> stream){
+  static <T> List<T> listOf(Stream<? extends T> stream){
     return stream.collect(toImmutableList());
   }
 
@@ -34,7 +34,7 @@ public class Immutable {
    * @param <T> type parameter
    * @return an immutable list.
    */
-  public static <T> List<T> listOf(Collection<? extends T> list){
+  static <T> List<T> listOf(Collection<? extends T> list){
     return list.stream().collect(toImmutableList());
   }
 
@@ -45,7 +45,7 @@ public class Immutable {
    * @param <T> type parameter
    * @return an immutable set.
    */
-  public static <T> Set<T> setOf(Collection<? extends T> list){
+  static <T> Set<T> setOf(Collection<? extends T> list){
     return list.stream().collect(toImmutableSet());
   }
 
@@ -55,7 +55,7 @@ public class Immutable {
    * @param <T> type parameter
    * @return an immutable list.
    */
-  public static <T> Set<T> setOf(Stream<? extends T> stream){
+  static <T> Set<T> setOf(Stream<? extends T> stream){
     return stream.collect(toImmutableSet());
   }
 

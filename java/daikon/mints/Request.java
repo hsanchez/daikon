@@ -5,6 +5,7 @@ import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.Lists;
 import daikon.PptMap;
+import daikon.mints.Clustering.Cluster;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,12 +13,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static daikon.mints.CommandLineConst.DBC;
+import static daikon.mints.CommandLineConst.KM;
+import static daikon.mints.CommandLineConst.MLCS;
+import static daikon.mints.CommandLineConst.PIM;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.WRITE;
 
@@ -46,7 +52,7 @@ abstract class Request {
    * @param output the output.json file.
    * @param pruning true if pruning is enabled; false otherwise.
    * @param log log object
-   * @return a new Request object.
+   * @return a new Data Request object.
    */
   static Request invariantsData(Path input, Path output, boolean pruning, Log log){
     return new DataRequest(input, output, pruning, log);
@@ -59,23 +65,23 @@ abstract class Request {
    * @param jsonFile data.json file produced by {@link #invariantsData(Path, Path, boolean, Log)}
    * @param outFile file where output will be written.
    * @param log log object
-   * @return a new Request object.
+   * @return a new Patterns Request object.
    */
   static Request interestingPatterns(String invokeWith, Path jsonFile, Path outFile, Log log){
     return new PatternsRequest(invokeWith, jsonFile, outFile, log);
   }
 
   /**
+   * Finds similar methods based on shared likely invariants.
    *
-   * @param invokeWith
-   * @param paths
-   * @param log
-   * @return
+   * @param invokeWith similarity strategy (km|dbc).
+   * @param paths the files to compare
+   * @param log log object
+   * @return a new Similarity Request object.
    */
   static Request similarMethods(String invokeWith, List<Path> paths, Log log){
     return new SimRequest(invokeWith, paths, log);
   }
-
 
   static class DataRequest extends Request {
     private final Path    input;
@@ -152,8 +158,6 @@ abstract class Request {
   }
 
   static class PatternsRequest extends Request {
-    private static final String BASELINE  = "mlcs";
-    private static final String PIM       = "pim";
 
     private final String  command;
     private final Path    jsonFile;
@@ -209,7 +213,7 @@ abstract class Request {
 
     private static List<Record> invokeWith(String command, List<List<Record>> allRecords, Log log){
       switch (command){
-        case BASELINE:
+        case MLCS:
           return Inference.commonSubsequence(allRecords, log);
         case PIM:
           return Inference.pim(allRecords);
@@ -236,9 +240,10 @@ abstract class Request {
   }
 
   static class SimRequest extends Request {
-    private final String invokeWith;
-    private final List<Path> paths;
-    private final Log log;
+
+    private final String      invokeWith;
+    private final List<Path>  paths;
+    private final Log         log;
 
     SimRequest(String invokeWith, List<Path> paths, Log log){
       this.invokeWith = invokeWith;
@@ -247,7 +252,35 @@ abstract class Request {
     }
 
     @Override void fulfill() {
-      log.info("Fulfilled!");
+
+      // the output file is always last
+      final Path output = paths.get(paths.size() - 1);
+
+      final Map<String, List<Record>> data = new HashMap<>();
+
+      for(Path each: paths){
+        if(FileUtils.isSamePath(each, output)) continue;
+
+        final Map<String, List<Record>> invariantSeq = Jsons.readJson(each);
+
+        data.putAll(invariantSeq);
+      }
+
+      final List<Cluster> clusters = invokeWith(invokeWith, data, log);
+
+      log.info(String.format("Formed %d clusters", clusters.size()));
+    }
+
+    private static List<Cluster> invokeWith(String command, Map<String, List<Record>> data, Log log){
+
+      switch (command){
+        case KM:
+          return Clustering.clusterWithKmeans(data, log);
+        case DBC:
+          return Immutable.emptyList();
+        default:
+          return Immutable.emptyList();
+      }
     }
 
     @Override Log getLog() {

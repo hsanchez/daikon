@@ -127,6 +127,25 @@ class FileUtils {
   }
 
   /**
+   * Checks if two paths are the same.
+   *
+   * @param a first path
+   * @param b second path
+   * @return true if a and b are the same; false otherwise.
+   */
+  static boolean isSamePath(Path a, Path b){
+    try {
+
+      final String pathA = a.toFile().getCanonicalPath();
+      final String pathB = b.toFile().getCanonicalPath();
+
+      return pathA.equalsIgnoreCase(pathB) || Files.isSameFile(a, b);
+    } catch (IOException e) {
+      return false;
+    }
+  }
+
+  /**
    * Translates a .gz file into a PptMap object.
    *
    * @param file serialized .gz file.

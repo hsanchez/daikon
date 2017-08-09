@@ -8,9 +8,17 @@ package daikon.mints;
  * prep, and mine. To run prep from the command line, run
  * <code>java daikon.mints.Mints --mode prep &lt;path/to/gz-files&gt;
  * &lt;path/to/output.json&gt;</code>.
+ *
  * For running the mine mode with the baseline mining strategy, use
  * <code>java daikon.mints.Mints --mode mine &lt;path/to/input.json&gt;
  * &lt;path/to/pattern.json&gt;</code>.
+ *
+ * For running the sim mode with the baseline clustering strategy, use
+ * <code>java daikon.mints.Mints --mode sim  &lt;path/to/data1.json&gt
+ * &lt;path/to/data2.json&gt &lt;path/to/output.json&gt</code>
+ *
+ * <p/>
+ *
  *
  * @author Huascar A. Sanchez
  **/
