@@ -286,7 +286,7 @@ abstract class Clustering {
 
         final ItemCounter counter = new ItemCounter(wordSet);
 
-        return Index.createIndex(Immutable.listOf(counter.top(counter.entriesByFrequency().size())));
+        return Index.createIndex(Immutable.listOf(counter.top(counter.totalCount())));
       }
 
       /**
@@ -438,7 +438,7 @@ abstract class Clustering {
      */
     static class ItemCounter {
       private final Map<Item, Item> items;
-      private final AtomicInteger totalItemCount;
+      private final AtomicInteger   totalItemCount;
 
       /**
        * Counts words in some text.
@@ -534,6 +534,10 @@ abstract class Clustering {
           .map(Map.Entry::getValue)
           .sorted((a, b) -> Integer.compare(b.value(), a.value()))
           .collect(Collectors.toList());
+      }
+
+      int totalCount(){
+        return totalItemCount.get();
       }
 
     }
