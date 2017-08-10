@@ -195,32 +195,39 @@ abstract class Clustering {
 
         for (int loop = 0; loop < 5/*recommended number of loops*/; loop++) {
 
+//          // exchange the two random documents among the random clusters.
+//          clusters.get(randomClusterIds.get(0)).removeDocument(
+//            randomDocumentNames.get(0));
+//          clusters.get(randomClusterIds.get(0)).addDocument(
+//            randomDocumentNames.get(1),
+//            collection.getDocument(randomDocumentNames.get(1)));
+//          clusters.get(randomClusterIds.get(1)).removeDocument(
+//            randomDocumentNames.get(1));
+//          clusters.get(randomClusterIds.get(1)).addDocument(
+//            randomDocumentNames.get(0),
+//            collection.getDocument(randomDocumentNames.get(0)));z
+
           // Find a new set of clusters by altering the membership of some
           // documents. Start by picking two clusters at random
           List<Cluster> twoRandomClusters = randomSubList(clusters, 2);
 
-          final List<String> allTheDocsInRandomClusters = twoRandomClusters
-            .stream()
-            .flatMap(listContainer -> listContainer.itemList().stream())
-            .collect(Collectors.toList());
-
-          // pick two documents out of the randomly selected clusters, at random
-          List<String>  twoRandomDocs = randomSubList(allTheDocsInRandomClusters, 2);
+          // pick two documents out of the randomly selected clusters
+          // (also at random)
+          List<String>  twoRandomDocuments = getRandomDocumentNames(twoRandomClusters);
 
           // exchange the two random documents among the random clusters.
           clusters.get(indexOf(clusters, twoRandomClusters.get(0)))
-            .remove(twoRandomDocs.get(0));
-
+            .remove(twoRandomDocuments.get(0));
 
           clusters.get(indexOf(clusters, twoRandomClusters.get(0)))
-            .add(twoRandomDocs.get(1), documents.get(twoRandomDocs.get(1)));
+            .add(twoRandomDocuments.get(1), documents.get(twoRandomDocuments.get(1)));
 
           clusters.get(indexOf(clusters, twoRandomClusters.get(1))).remove(
-            twoRandomDocs.get(1));
+            twoRandomDocuments.get(1));
 
           clusters.get(indexOf(clusters, twoRandomClusters.get(1))).add(
-            twoRandomDocs.get(0),
-            documents.get(twoRandomDocs.get(0)));
+            twoRandomDocuments.get(0),
+            documents.get(twoRandomDocuments.get(0)));
 
           // Compare the difference between the values of the new and old
           // set of clusters. If there is an improvement, accept the new
@@ -233,12 +240,13 @@ abstract class Clustering {
             .mapToDouble(Cluster::getRadius)
             .average().orElse(0.0D);
 
+          //  if (averageRadius > previousAverageRadius) {
           if (Double.compare(averageRadius, previousAverageRadius) > 0) {
             // possible downhill move, calculate the probability of it being
             // accepted
 
             final double probability = Math.exp((previousAverageRadius - averageRadius)/hi);
-            if (probability < 0.7D/* downhill Probability Cutoff */) {
+            if (Double.compare(probability, 0.7D/* downhill Probability Cutoff */) < 0) {
               // go back to the cluster before the changes
               clusters.clear();
               clusters.addAll(prevClusters);
@@ -259,6 +267,21 @@ abstract class Clustering {
       log.info(String.format("Formed %d clusters", clusters.size()));
 
       return clusters;
+    }
+
+    private List<String> getRandomDocumentNames(List<Cluster> clusters) {
+
+      List<String> randomDocumentNames = new ArrayList<>();
+
+      for (Cluster randomCluster : clusters) {
+
+        final List<String> itemList = new ArrayList<>(randomCluster.itemList());
+        Collections.shuffle(itemList);
+
+        randomDocumentNames.add(itemList.get(0));
+      }
+
+      return randomDocumentNames;
     }
 
     static <T> int indexOf(List<T> items, T item){
