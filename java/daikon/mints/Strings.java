@@ -22,11 +22,8 @@ public class Strings {
     return EMPTY;
   }
 
-  static boolean isEmpty(String text){
-    if(empty().equals(text)) return true;
-
-    final Optional<String> optional = Optional.ofNullable(text);
-    return optional.map(s -> !s.isEmpty()).orElse(false);
+  static boolean isEmpty(String text) {
+    return text == null || text.isEmpty();
   }
 
 

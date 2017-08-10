@@ -75,8 +75,6 @@ abstract class Clustering {
 
       int numSeqs = docList.size();
 
-      log.info(String.format("%d sequences to be processed.", numSeqs));
-
       int numClusters = (int) Math.floor(Math.sqrt(numSeqs));
 
 
@@ -135,6 +133,7 @@ abstract class Clustering {
       clusters.removeIf(cluster -> cluster.itemList().isEmpty());
 
       log.info(String.format("Formed %d clusters", clusters.size()));
+      clusters.forEach(c -> log.info(c.toString()));
 
       return Immutable.listOf(clusters);
     }

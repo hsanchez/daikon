@@ -55,15 +55,16 @@ class Summaries {
       final PptTopLevel eachValue = pptMap.get(eachKey);
       final PptName pptName = eachValue.ppt_name;
 
+      // Skip constructors
+      if(pptName.isConstructor()) continue;
+      if(Strings.isEmpty(pptName.getMethodName())) continue;
+
       final Optional<SummaryDescriptor> candidateSource = Optional
         .ofNullable(SummaryDescriptor.from(pptName, !isExit));
 
       if (!candidateSource.isPresent()) continue;
 
       final SummaryDescriptor descriptor = candidateSource.get();
-
-      // skip constructors
-      if (descriptor.isConstructor()) continue;
 
       final List<Invariant> filtered = filterWarnings(
         eachValue.getInvariants(),

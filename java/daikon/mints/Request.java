@@ -100,6 +100,14 @@ abstract class Request {
     @Override void fulfill() {
 
       final List<SequenceSummary> summaries = generateSummaries(input, pruning);
+      if(summaries.isEmpty()) {
+        getLog().error(
+          "Not sequence summaries to process.",
+          new RuntimeException("Missing Summaries")
+        );
+
+        return;
+      }
 
       final int k = (int) Math.floor(Math.sqrt(summaries.size()));
 
