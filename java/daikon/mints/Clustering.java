@@ -195,18 +195,6 @@ abstract class Clustering {
 
         for (int loop = 0; loop < 5/*recommended number of loops*/; loop++) {
 
-//          // exchange the two random documents among the random clusters.
-//          clusters.get(randomClusterIds.get(0)).removeDocument(
-//            randomDocumentNames.get(0));
-//          clusters.get(randomClusterIds.get(0)).addDocument(
-//            randomDocumentNames.get(1),
-//            collection.getDocument(randomDocumentNames.get(1)));
-//          clusters.get(randomClusterIds.get(1)).removeDocument(
-//            randomDocumentNames.get(1));
-//          clusters.get(randomClusterIds.get(1)).addDocument(
-//            randomDocumentNames.get(0),
-//            collection.getDocument(randomDocumentNames.get(0)));z
-
           // Find a new set of clusters by altering the membership of some
           // documents. Start by picking two clusters at random
           List<Cluster> twoRandomClusters = randomSubList(clusters, 2);

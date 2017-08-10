@@ -116,12 +116,12 @@ public class CommandLineParseResult {
     System.out.println();
     System.out.println("      Default value: false");
     System.out.println();
-    System.out.println("  --invoke-with <mlcs|pim|km|dbc>: invoke a strategy for (mine|sim) modes. Examples:");
+    System.out.println("  --invoke-with <mlcs|pim|km|sac>: invoke a strategy for (mine|sim) modes. Examples:");
     System.out.println("      --mode mine --invoke-with mlcs");
     System.out.println("      --mode sim --invoke-with km");
     System.out.println();
     System.out.println("      <mlcs|pim>: available strategies for the mine mode.");
-    System.out.println("      <km|dbc>: available strategies for the sim mode.");
+    System.out.println("      <km|sac>: available strategies for the sim mode.");
     System.out.println();
     System.out.println("      Default value for mine mode: mlcs");
     System.out.println("      Default value for sim mode: km");
