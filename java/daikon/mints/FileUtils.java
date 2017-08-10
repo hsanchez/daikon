@@ -1,5 +1,7 @@
 package daikon.mints;
 
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonValue;
 import daikon.FileIO;
 import daikon.PptMap;
 
@@ -26,8 +28,12 @@ import java.util.stream.Collectors;
 /**
  * @author Huascar Sanchez
  */
-class Utils {
-  private Utils(){}
+class FileUtils {
+
+  private static final PathMatcher MATCHER = FileSystems.getDefault()
+    .getPathMatcher("glob:*.json");
+
+  private FileUtils(){}
 
 
   /**
@@ -116,6 +122,29 @@ class Utils {
     return findFiles(location, Log.verbose(), "gz", /*skip dtrace.gz files*/"dtrace");
   }
 
+  static boolean isJsonfile(Path file){
+    return MATCHER.matches(file);
+  }
+
+  /**
+   * Checks if two paths are the same.
+   *
+   * @param a first path
+   * @param b second path
+   * @return true if a and b are the same; false otherwise.
+   */
+  static boolean isSamePath(Path a, Path b){
+    try {
+
+      final String pathA = a.toFile().getCanonicalPath();
+      final String pathB = b.toFile().getCanonicalPath();
+
+      return pathA.equalsIgnoreCase(pathB) || Files.isSameFile(a, b);
+    } catch (IOException e) {
+      return false;
+    }
+  }
+
   /**
    * Translates a .gz file into a PptMap object.
    *
@@ -142,7 +171,7 @@ class Utils {
   static List<PptMap> mapList(Path directory){
     final List<File> invFiles = fileList(directory);
     final List<PptMap> invContainers = invFiles.stream()
-      .map(Utils::toPptMap)
+      .map(FileUtils::toPptMap)
       .collect(Collectors.toList());
 
     if(invContainers.isEmpty()){
@@ -150,6 +179,29 @@ class Utils {
     }
 
     return invContainers;
+  }
+
+  /**
+   * Loads the content of a JSON file.
+   *
+   * @param filepath the path to the JSON file.
+   * @return a new Json value.
+   */
+  static JsonValue toJson(Path filepath){
+    JsonValue result = Json.object();
+
+    if(!Files.exists(filepath)){
+      return result;
+    }
+
+    try {
+      final String content = new String(Files.readAllBytes(filepath));
+      result = Json.parse(content);
+    } catch (IOException ignored){
+      Log.verbose().error("Unable to read JSON file", ignored);
+    }
+
+    return result;
   }
 
   /**

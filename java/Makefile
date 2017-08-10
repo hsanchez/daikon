@@ -69,7 +69,7 @@ endif
 
 # Add flags like "-source 5" or "-target 5" to JAVAC_TARGET_FLAGS.
 # That variable appears last and overrides the values we provide here.
-JAVAC_ARGS ?= -g -XDignore.symbol.file -source 7 -target 7 -Werror -Xlint:-path -Xlint:-options -Xlint:-classfile ${JAVAC_TARGET_FLAGS}
+JAVAC_ARGS ?= -g -XDignore.symbol.file -source 8 -target 8 -Werror -Xlint:-path -Xlint:-options -Xlint:-classfile ${JAVAC_TARGET_FLAGS}
 
 INSTALL ?= /usr/bin/install
 
@@ -103,10 +103,10 @@ JAVAC_COMMAND_FOR_CHECKER = ${JAVAC_FOR_CHECKER} -J-Xmx2048m
 # distributed version, of Daikon.  The if clause avoids a (harmless but
 # annoying) javac error message that they don't exist.
 ifeq "$(wildcard ${DAIKONDIR}/java/lib/plume.jar)" "${DAIKONDIR}/java/lib/plume.jar"
-    CLASSPATH_JARS = :${DAIKONDIR}/java/lib/java-getopt.jar:${DAIKONDIR}/java/lib/junit-4.12.jar:${DAIKONDIR}/java/lib/plume.jar
+    CLASSPATH_JARS = :${DAIKONDIR}/java/lib/java-getopt.jar:${DAIKONDIR}/java/lib/junit-4.12.jar:${DAIKONDIR}/java/lib/plume.jar:${DAIKONDIR}/java/lib/minimal-json-0.9.4.jar
 endif
 ifeq "$(wildcard ${CHECKERJAR})" "${CHECKERJAR}"
-    CLASSPATH_JARS2 = ${CHECKERJAR}
+    CLASSPATH_JARS2 = ${CHECKERJAR}:${DAIKONDIR}/java/lib/minimal-json-0.9.4.jar
 endif
 
 # This probably shouldn't be unconditional??

@@ -27,12 +27,12 @@ class Summaries {
    * @param pptMap program point map
    * @return a new list of summary objects.
    */
-  static List<SequenceSummary> from(PptMap pptMap) {
-    return from(pptMap, true);
+  static List<SequenceSummary> from(PptMap pptMap, boolean pruning) {
+    return from(pptMap, true, pruning);
   }
 
   @SuppressWarnings("SameParameterValue")
-  private static List<SequenceSummary> from(PptMap pptMap, boolean skipWarning) {
+  private static List<SequenceSummary> from(PptMap pptMap, boolean skipWarning, boolean pruning) {
     if (Objects.isNull(pptMap)) return Collections.emptyList();
 
     final List<SequenceSummary> result = new LinkedList<>();
@@ -40,7 +40,7 @@ class Summaries {
     final Map<SummaryDescriptor, SequenceSummary> segmentMap = new HashMap<>();
 
     for (String eachKey : pptMap.nameStringSet()) {
-      // ignore Randoop & JUnit related artifacts
+      // ignore both Randoop & JUnit specific artifacts
       if (eachKey.contains("BuildersRegression")) continue;
       if (eachKey.contains("RegressionTestDriver")) continue;
       if (eachKey.contains("org.junit.")) continue;
@@ -55,6 +55,10 @@ class Summaries {
       final PptTopLevel eachValue = pptMap.get(eachKey);
       final PptName pptName = eachValue.ppt_name;
 
+      // Skip constructors
+      if(pptName.isConstructor()) continue;
+      if(Strings.isEmpty(pptName.getMethodName())) continue;
+
       final Optional<SummaryDescriptor> candidateSource = Optional
         .ofNullable(SummaryDescriptor.from(pptName, !isExit));
 
@@ -62,13 +66,13 @@ class Summaries {
 
       final SummaryDescriptor descriptor = candidateSource.get();
 
-      // skip constructors
-      if (descriptor.isConstructor()) continue;
-
-      final List<Invariant> validOnes = filterWarnings(
+      final List<Invariant> filtered = filterWarnings(
         eachValue.getInvariants(),
         skipWarning
       );
+
+      // Interesting group invariants in each Java method
+      final List<Invariant> validOnes = pruning ? Motif.sequence(filtered) : filtered;
 
       if (!segmentMap.containsKey(descriptor)) {
         final SequenceSummary sequence = new SequenceSummary(descriptor);

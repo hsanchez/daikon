@@ -17,6 +17,11 @@ import static java.nio.file.StandardOpenOption.WRITE;
  * @author Huascar Sanchez
  */
 public class MapTask extends Task {
+
+  private static final String DAIKON_PRODUCED_INVARIANT = "i";
+  private static final String DAIKON_TYPE_USED_TO_CAPTURE_INVARIANT = "t";
+  private static final String INVARIANTS_ARRAY = "invs";
+
   private final Path  filepath;
   private final Log   log;
   private final List<SequenceSummary> partition;
@@ -31,7 +36,7 @@ public class MapTask extends Task {
     this.log        = log;
 
     if(Files.exists(this.filepath)){
-      Utils.deleteFile(this.filepath);
+      FileUtils.deleteFile(this.filepath);
     }
 
     this.partition  = Objects.requireNonNull(partition);
@@ -54,13 +59,13 @@ public class MapTask extends Task {
       for(LikelyInvariant eachInv : eachSummary.content()){
         final JsonObject eachObject = Json.object();
 
-        eachObject.add("i", eachInv.invariantObject().format()); // i: invariant
-        eachObject.add("t", eachInv.typeOfInvariant()); // t: type of invariant
+        eachObject.add(DAIKON_PRODUCED_INVARIANT, eachInv.invariantObject().format()); // i: invariant
+        eachObject.add(DAIKON_TYPE_USED_TO_CAPTURE_INVARIANT, eachInv.typeOfInvariant()); // t: type of invariant
 
         invs.add(eachObject);
       }
 
-      item.add("invs", invs);
+      item.add(INVARIANTS_ARRAY, invs);
 
       log.info(item.toString());
 

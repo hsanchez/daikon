@@ -43,19 +43,16 @@ class SummaryDescriptor {
 
 
   private final String        fullClassName;
-  private final boolean       isConstructor;
   private final List<String>  classLabels;
   private final String        parametersString;
   private final String        methodName;
   private final boolean       caughtAsPrecondition;
 
   private SummaryDescriptor(String className, String methodName,
-                            String joinedParameters, boolean isConstructor,
-                            boolean isEntry) {
+                            String joinedParameters, boolean isEntry) {
 
     this.fullClassName        = Objects.requireNonNull(className);
     this.parametersString     = Objects.requireNonNull(joinedParameters);
-    this.isConstructor        = isConstructor;
     this.classLabels          = Strings.generateLabel(methodName);
     this.methodName           = methodName;
     this.caughtAsPrecondition = isEntry;
@@ -92,26 +89,18 @@ class SummaryDescriptor {
       guessedMethodName = guessedMethodName.replace("()", NOTHING);
     }
 
-    final String shortClassname = Objects.requireNonNull(pointName.getShortClassName());
-    final boolean isConstructor = shortClassname.equals(guessedMethodName);
-
     final String paramsString = Strings.joinParameters(ENV, parameters);
 
     return new SummaryDescriptor(
       pointName.getFullClassName(),
       guessedMethodName,
       paramsString,
-      isConstructor,
       isEntry
     );
   }
 
   String className() {
     return fullClassName;
-  }
-
-  boolean isConstructor() {
-    return isConstructor;
   }
 
   List<String> labelList() {
@@ -152,9 +141,7 @@ class SummaryDescriptor {
     final String classLabels = labelList().toString().replace("[", "").replace("]", "");
 
     return ("(" + className() + ",	" +
-      (isConstructor()
-        ? ("(new,	" + classLabels + ")")
-        : (("(" + classLabels + ")")))
+      ((("(" + classLabels + ")")))
       +
       ((Objects.isNull(paramString()) || paramString().isEmpty())
         ? ""

@@ -1,23 +1,19 @@
 package daikon.mints;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * @author Huascar Sanchez
  */
 public class Strings {
   private static final String EMPTY = "";
-  private static final String SPLIT_PATTERN = "(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])";
+  private static final String SPLIT_PATTERN = "((?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z]))|_";
 
   private Strings(){}
 
@@ -26,18 +22,25 @@ public class Strings {
     return EMPTY;
   }
 
-  static boolean isEmpty(String text){
-    if(empty().equals(text)) return true;
-
-    final Optional<String> optional = Optional.ofNullable(text);
-    return optional.map(s -> !s.isEmpty()).orElse(false);
+  static boolean isEmpty(String text) {
+    return text == null || text.isEmpty();
   }
 
 
   static List<String> generateLabel(String guessedName){
-    return Immutable.listOf(Arrays.stream(
-      guessedName.split(SPLIT_PATTERN))
-      .map(String::toLowerCase));
+    return Immutable.listOf(
+      Arrays.stream(splitMassaging(guessedName)).map(String::toLowerCase)
+    );
+  }
+
+
+  private static String[] splitMassaging(String identifier){
+    String[] split = identifier.split(SPLIT_PATTERN);
+    if(split.length == 1){
+      split = split[0].split(Pattern.quote("_"));
+    }
+
+    return split;
   }
 
   static String joinParameters(Map<String, String> env, List<String> params){
@@ -67,28 +70,4 @@ public class Strings {
     return toString.toString();
   }
 
-  private static String readFromInputStream(InputStream inputStream) throws IOException {
-    StringBuilder content = new StringBuilder();
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
-      String line;
-      while ((line = br.readLine()) != null) {
-        content.append(line).append("\n");
-      }
-    }
-
-    return content.toString();
-  }
-
-  static String fetchContent(URL url) {
-    try {
-
-      final InputStream is = (InputStream) url.getContent();
-
-      assert !Objects.isNull(is);
-
-      return readFromInputStream(is);
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
-    }
-  }
 }
