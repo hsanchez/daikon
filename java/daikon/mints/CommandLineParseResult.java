@@ -384,12 +384,6 @@ public class CommandLineParseResult {
 
   }
 
-  // Given boolean options a and b, and non-boolean option f, we want to allow:
-  // -ab
-  // -abf out.txt
-  // -abfout.txt
-  // (But not -abf=out.txt --- POSIX doesn't mention that either way, but GNU
-  // expressly forbids it.)
   private void parseGroupedShortOptions(String arg, Iterator<String> args) {
     final int len = arg.length();
     for (int i = 1; i < len; ++i) {
